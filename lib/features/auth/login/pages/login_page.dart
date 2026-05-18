@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../register/pages/register_page.dart';
-import '../../../../core/utils/components/navigation.dart';
+import '../../../user/widgets/navigation.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -22,7 +22,7 @@ class _LoginPageState extends State<LoginPage> {
       });
       final email = _emailController.text.trim();
       final password = _passwordController.text.trim();
-      
+
       if (email.isEmpty || password.isEmpty) {
         throw Exception('Please fill all fields');
       }
@@ -89,10 +89,7 @@ class _LoginPageState extends State<LoginPage> {
               const SizedBox(height: 8),
               Text(
                 'Sign in to continue your journey',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.grey.shade600,
-                ),
+                style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 48),
@@ -136,8 +133,8 @@ class _LoginPageState extends State<LoginPage> {
                       borderRadius: BorderRadius.circular(16),
                     ),
                   ),
-                  child: _isLoading 
-                      ? const CircularProgressIndicator(color: Colors.white) 
+                  child: _isLoading
+                      ? const CircularProgressIndicator(color: Colors.white)
                       : const Text(
                           'Login',
                           style: TextStyle(
@@ -160,7 +157,9 @@ class _LoginPageState extends State<LoginPage> {
                     onTap: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => const RegisterPage()),
+                        MaterialPageRoute(
+                          builder: (context) => const RegisterPage(),
+                        ),
                       );
                     },
                     child: const Text(
