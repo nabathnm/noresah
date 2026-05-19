@@ -1,12 +1,36 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../auth/login/pages/login_page.dart';
+import '../../../../core/providers/profile_provider.dart';
 
-class ProfilePage extends StatelessWidget {
+class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
 
   @override
+  State<ProfilePage> createState() => _ProfilePageState();
+}
+
+class _ProfilePageState extends State<ProfilePage> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final provider = Provider.of<ProfileProvider>(context, listen: false);
+      if (provider.profile == null) {
+        provider.fetchProfile();
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final profileProvider = context.watch<ProfileProvider>();
+    final profile = profileProvider.profile;
+    final isLoading = profileProvider.isLoading;
+
+    final nickname = profile?['nickname'] ?? 'Memuat...';
+
     return Scaffold(
       backgroundColor: const Color(0xffF5F7FB),
       appBar: AppBar(
@@ -22,42 +46,44 @@ class ProfilePage extends StatelessWidget {
         ),
       ),
 
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            // Profile Header
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(24),
-              decoration: _cardDecoration(),
+      body: isLoading && profile == null
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
+              padding: const EdgeInsets.all(20),
               child: Column(
                 children: [
-                  const CircleAvatar(
-                    radius: 50,
-                    backgroundImage: NetworkImage(
-                      'https://i.pravatar.cc/300',
-                    ),
-                  ),
+                  // Profile Header
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(24),
+                    decoration: _cardDecoration(),
+                    child: Column(
+                      children: [
+                        const CircleAvatar(
+                          radius: 50,
+                          backgroundImage: NetworkImage(
+                            'https://i.pravatar.cc/300',
+                          ),
+                        ),
 
-                  const SizedBox(height: 16),
+                        const SizedBox(height: 16),
 
-                  const Text(
-                    'Nabath Nuur',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                        Text(
+                          nickname,
+                          style: const TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
 
-                  const SizedBox(height: 6),
+                        const SizedBox(height: 6),
 
-                  Text(
-                    'Keep taking care of yourself 🌱',
-                    style: TextStyle(
-                      color: Colors.grey.shade600,
-                    ),
-                  ),
+                        Text(
+                          'Keep taking care of yourself 🌱',
+                          style: TextStyle(
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
 
                   const SizedBox(height: 20),
 

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../onboarding/pages/onboarding_page.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -37,11 +38,16 @@ class _RegisterPageState extends State<RegisterPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Registration successful! You can now login.'),
+            content: Text(
+              'Registration successful! Please complete your profile.',
+            ),
             backgroundColor: Colors.green,
           ),
         );
-        Navigator.pop(context); // Go back to login
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const OnboardingPage()),
+        );
       }
     } on AuthException catch (e) {
       if (mounted) {
@@ -102,10 +108,7 @@ class _RegisterPageState extends State<RegisterPage> {
               const SizedBox(height: 8),
               Text(
                 'Start your mental health journey today',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.grey.shade600,
-                ),
+                style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 48),
@@ -149,8 +152,8 @@ class _RegisterPageState extends State<RegisterPage> {
                       borderRadius: BorderRadius.circular(16),
                     ),
                   ),
-                  child: _isLoading 
-                      ? const CircularProgressIndicator(color: Colors.white) 
+                  child: _isLoading
+                      ? const CircularProgressIndicator(color: Colors.white)
                       : const Text(
                           'Register',
                           style: TextStyle(
