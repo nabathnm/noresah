@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'core/providers/profile_provider.dart';
-import 'features/auth/login/pages/login_page.dart';
+import 'features/auth/onboarding/providers/onboarding_provider.dart';
+import 'core/utils/widgets/auth_gate.dart';
 
 class App extends StatelessWidget {
   const App({super.key});
@@ -10,12 +11,15 @@ class App extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => ProfileProvider()),
+        ChangeNotifierProvider(create: (_) => OnboardingProvider()),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
-        title: 'Flutter Demo',
-        theme: ThemeData(colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple)),
-        home: const LoginPage(), // atau cek session auth di sini
+        title: 'Noresah',
+        theme: ThemeData(
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        ),
+        home: const AuthGate(),
       ),
     );
   }
