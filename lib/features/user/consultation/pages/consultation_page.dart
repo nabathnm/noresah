@@ -1,49 +1,61 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../../../core/providers/booking_provider.dart';
+import '../../../../core/models/booking.dart';
+import 'booking_detail_page.dart';
+import 'my_bookings_page.dart';
 
-class ConsultationPage extends StatelessWidget {
+class ConsultationPage extends StatefulWidget {
   const ConsultationPage({super.key});
 
   @override
+  State<ConsultationPage> createState() => _ConsultationPageState();
+}
+
+class _ConsultationPageState extends State<ConsultationPage> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final provider = Provider.of<BookingProvider>(context, listen: false);
+      provider.fetchPsychologists();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final List<Map<String, dynamic>> psychologists = [
-      {
-        'name': 'Dr. Sarah Wijaya',
-        'specialist': 'Anxiety & Stress',
-        'experience': '6 Years Experience',
-        'rating': '4.9',
-        'price': 'Rp120K/session',
-      },
-      {
-        'name': 'Dr. Michael Adrian',
-        'specialist': 'Depression & Burnout',
-        'experience': '8 Years Experience',
-        'rating': '4.8',
-        'price': 'Rp150K/session',
-      },
-      {
-        'name': 'Dr. Olivia Chen',
-        'specialist': 'Sleep & Emotional Health',
-        'experience': '5 Years Experience',
-        'rating': '4.9',
-        'price': 'Rp135K/session',
-      },
-    ];
+    final bookingProvider = context.watch<BookingProvider>();
+    final psychologists = bookingProvider.filteredPsychologists;
 
     return Scaffold(
       backgroundColor: const Color(0xffF5F7FB),
-
       appBar: AppBar(
         backgroundColor: const Color(0xffF5F7FB),
         elevation: 0,
         title: const Text(
-          'Consultation',
+          'Konsultasi',
           style: TextStyle(
             color: Colors.black,
             fontWeight: FontWeight.bold,
           ),
         ),
+        actions: [
+          IconButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const MyBookingsPage(),
+                ),
+              );
+            },
+            icon: const Icon(
+              Icons.calendar_month_rounded,
+              color: Colors.black,
+            ),
+          ),
+        ],
       ),
-
       body: Column(
         children: [
           // Header Banner
@@ -70,26 +82,22 @@ class ConsultationPage extends StatelessWidget {
                     size: 30,
                   ),
                 ),
-
                 const SizedBox(width: 16),
-
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: const [
                       Text(
-                        'Professional Support 🌱',
+                        'Bantuan Profesional 🌱',
                         style: TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
                           fontSize: 20,
                         ),
                       ),
-
                       SizedBox(height: 6),
-
                       Text(
-                        'Talk safely with certified psychologists and counselors.',
+                        'Bicara dengan aman bersama psikolog dan konselor bersertifikat.',
                         style: TextStyle(
                           color: Colors.white,
                           height: 1.4,
@@ -106,14 +114,13 @@ class ConsultationPage extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: TextField(
+              onChanged: (value) => bookingProvider.setSearchQuery(value),
               decoration: InputDecoration(
-                hintText: 'Search psychologist...',
+                hintText: 'Cari psikolog...',
                 prefixIcon: const Icon(Icons.search),
                 filled: true,
                 fillColor: Colors.white,
-                contentPadding: const EdgeInsets.symmetric(
-                  vertical: 16,
-                ),
+                contentPadding: const EdgeInsets.symmetric(vertical: 16),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(18),
                   borderSide: BorderSide.none,
@@ -127,17 +134,35 @@ class ConsultationPage extends StatelessWidget {
           // Categories
           SizedBox(
             height: 50,
-            child: ListView(
+            child: ListView.builder(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               scrollDirection: Axis.horizontal,
-              children: const [
-                CategoryChip(label: 'All'),
-                CategoryChip(label: 'Stress'),
-                CategoryChip(label: 'Depression'),
-                CategoryChip(label: 'Anxiety'),
-                CategoryChip(label: 'Sleep'),
-                CategoryChip(label: 'Burnout'),
-              ],
+              itemCount: bookingProvider.categories.length,
+              itemBuilder: (context, index) {
+                final cat = bookingProvider.categories[index];
+                final isSelected = bookingProvider.selectedCategory == cat;
+                return GestureDetector(
+                  onTap: () => bookingProvider.setCategory(cat),
+                  child: Container(
+                    margin: const EdgeInsets.only(right: 12),
+                    child: Chip(
+                      backgroundColor:
+                          isSelected ? const Color(0xFF3D8BFF) : Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      label: Text(
+                        cat,
+                        style: TextStyle(
+                          color: isSelected ? Colors.white : Colors.black87,
+                          fontWeight:
+                              isSelected ? FontWeight.bold : FontWeight.normal,
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              },
             ),
           ),
 
@@ -145,156 +170,49 @@ class ConsultationPage extends StatelessWidget {
 
           // Psychologist List
           Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              itemCount: psychologists.length,
-              itemBuilder: (context, index) {
-                final doctor = psychologists[index];
-
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 16),
-                  padding: const EdgeInsets.all(18),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(24),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.04),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-
-                  child: Column(
-                    children: [
-                      Row(
-                        children: [
-                          const CircleAvatar(
-                            radius: 32,
-                            backgroundColor: Color(0xffDDE7FF),
-                            child: Icon(
-                              Icons.person,
-                              size: 34,
-                              color: Colors.black,
+            child: bookingProvider.isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : psychologists.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.search_off_rounded,
+                              size: 64,
+                              color: Colors.grey.shade300,
                             ),
-                          ),
-
-                          const SizedBox(width: 16),
-
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment:
-                                  CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  doctor['name'],
-                                  style: const TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-
-                                const SizedBox(height: 6),
-
-                                Text(
-                                  doctor['specialist'],
-                                  style: TextStyle(
-                                    color: Colors.grey.shade700,
-                                  ),
-                                ),
-
-                                const SizedBox(height: 6),
-
-                                Text(
-                                  doctor['experience'],
-                                  style: TextStyle(
-                                    color: Colors.grey.shade600,
-                                    fontSize: 13,
-                                  ),
-                                ),
-                              ],
+                            const SizedBox(height: 16),
+                            Text(
+                              'Psikolog tidak ditemukan',
+                              style: TextStyle(
+                                color: Colors.grey.shade500,
+                                fontSize: 16,
+                              ),
                             ),
-                          ),
-                        ],
-                      ),
-
-                      const SizedBox(height: 18),
-
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 8,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.orange.shade50,
-                              borderRadius:
-                                  BorderRadius.circular(14),
-                            ),
-                            child: Row(
-                              children: [
-                                const Icon(
-                                  Icons.star,
-                                  size: 18,
-                                  color: Colors.orange,
-                                ),
-
-                                const SizedBox(width: 6),
-
-                                Text(
-                                  doctor['rating'],
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-
-                          const Spacer(),
-
-                          Text(
-                            doctor['price'],
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      const SizedBox(height: 18),
-
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: () {},
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.black,
-                            padding: const EdgeInsets.symmetric(
-                              vertical: 16,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius:
-                                  BorderRadius.circular(18),
-                            ),
-                          ),
-                          child: const Text(
-                            'Book Consultation',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
+                          ],
                         ),
+                      )
+                    : ListView.builder(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        itemCount: psychologists.length,
+                        itemBuilder: (context, index) {
+                          final doctor = psychologists[index];
+                          return _PsychologistCard(
+                            psychologist: doctor,
+                            onBook: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => BookingDetailPage(
+                                    psychologist: doctor,
+                                  ),
+                                ),
+                              );
+                            },
+                          );
+                        },
                       ),
-                    ],
-                  ),
-                );
-              },
-            ),
           ),
         ],
       ),
@@ -302,24 +220,140 @@ class ConsultationPage extends StatelessWidget {
   }
 }
 
-class CategoryChip extends StatelessWidget {
-  final String label;
+class _PsychologistCard extends StatelessWidget {
+  final Psychologist psychologist;
+  final VoidCallback onBook;
 
-  const CategoryChip({
-    super.key,
-    required this.label,
+  const _PsychologistCard({
+    required this.psychologist,
+    required this.onBook,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(right: 12),
-      child: Chip(
-        backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(14),
-        ),
-        label: Text(label),
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              CircleAvatar(
+                radius: 32,
+                backgroundColor: const Color(0xffDDE7FF),
+                child: Text(
+                  psychologist.name.split(' ').last[0],
+                  style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF3D8BFF),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      psychologist.name,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      psychologist.specialist,
+                      style: TextStyle(
+                        color: Colors.grey.shade700,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      psychologist.experience,
+                      style: TextStyle(
+                        color: Colors.grey.shade600,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 18),
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.orange.shade50,
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.star,
+                      size: 18,
+                      color: Colors.orange,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      psychologist.rating.toString(),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Spacer(),
+              Text(
+                psychologist.price,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 18),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: onBook,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF3D8BFF),
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(18),
+                ),
+              ),
+              child: const Text(
+                'Booking Konsultasi',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

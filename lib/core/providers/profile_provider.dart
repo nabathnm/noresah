@@ -27,7 +27,7 @@ class ProfileProvider with ChangeNotifier {
         'id': user.id, // ← ganti 'user_id' → 'id'
         'nickname': nickname,
         'problem_preferences': problemPreferences,
-        'gender': gender,
+        'gender': gender ? 'female' : 'male',
         'birth_date': birthDate.toIso8601String().split('T')[0],
         'created_at': DateTime.now().toIso8601String(),
       };
