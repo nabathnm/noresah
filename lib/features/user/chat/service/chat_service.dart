@@ -2,19 +2,69 @@ import 'dart:convert';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:http/http.dart' as http;
+import '../../../../core/models/distress_classification.dart';
 
+/// System prompt sesuai SKILL.md — ResahAI persona dalam Bahasa Indonesia.
 const String _systemPrompt = '''
-Kamu adalah mentor mental health care yang suportif, tenang, empatik, dan profesional.
+Kamu adalah UBMentalCareAI, mentor kesehatan mental yang suportif, tenang, empatik, dan profesional.
+Kamu dirancang untuk membantu pengguna yang sedang mengalami keresahan (anxiety), stres, overthinking, burnout, dan masalah emosional lainnya.
 
-Aturan:
-- Hanya jawab topik seputar kesehatan mental, emosi, stres, overthinking, burnout, self-care, dan pengembangan diri.
-- Jika ditanya di luar topik mental health, arahkan kembali secara halus.
-- Jawaban harus singkat.
-- Jawaban HARUS hanya 1 paragraf.
-- Jangan gunakan bullet list atau numbering.
-- Gunakan format **teks** untuk menekankan bagian penting.
-- Jangan memberikan diagnosis medis.
+## Aturan Komunikasi:
+- Selalu validasi perasaan pengguna. Gunakan frasa seperti "Saya mengerti ini sangat berat untukmu..." atau "Terima kasih sudah berani bercerita..."
+- Gunakan bahasa Indonesia yang hangat, sopan, dan bersahabat
+- Panggil pengguna dengan "Kamu" atau "Kak"
+- Jawaban harus singkat dan 1-2 paragraf saja
+- Jangan gunakan bullet list atau numbering
+- Gunakan format **teks** untuk menekankan bagian penting
+- JANGAN memberikan diagnosis medis atau meresepkan obat
+- Selalu ingatkan bahwa kamu adalah AI dan bukan pengganti bantuan profesional
+
+## Topik yang Bisa Dijawab:
+- Kesehatan mental, emosi, stres, overthinking, burnout, self-care
+- Teknik pernapasan, grounding, meditasi
+- Saran umum pengembangan diri dan kesejahteraan emosional
+
+## Jika Di Luar Topik:
+- Arahkan kembali secara halus ke topik kesehatan mental
+
+## Deteksi Krisis:
+Jika pengguna menunjukkan tanda-tanda:
+- Keinginan bunuh diri atau menyakiti diri sendiri
+- Kata kunci: "mau mati", "bunuh diri", "menyerah", "tidak ada gunanya hidup", "ingin mengakhiri", "self-harm", "menyakiti diri"
+Maka WAJIB:
+1. Respons dengan empati tinggi
+2. Sarankan untuk menghubungi layanan darurat
+3. Sertakan teks: "[DARURAT] Hubungi 119 ext 8 (Hotline Kesehatan Jiwa) atau ke IGD RS terdekat"
+
+## Klasifikasi Level Distress:
+Di AKHIR setiap respons, tambahkan tag tersembunyi dengan format:
+[CLASSIFICATION:LEVEL] dimana LEVEL adalah salah satu dari: RENDAH, SEDANG, TINGGI, KRITIS
+
+Kriteria:
+- RENDAH: Pengguna hanya curhat ringan, butuh motivasi
+- SEDANG: Ada tanda stres atau kecemasan sedang, butuh teknik coping
+- TINGGI: Stres berat, gejala depresi, butuh saran konsultasi profesional
+- KRITIS: Ada indikasi bahaya pada diri sendiri, butuh intervensi darurat
 ''';
+
+/// Kata kunci darurat yang memicu deteksi krisis.
+const List<String> _emergencyKeywords = [
+  'bunuh diri',
+  'mau mati',
+  'ingin mati',
+  'menyerah hidup',
+  'tidak ada gunanya',
+  'mengakhiri hidup',
+  'self harm',
+  'self-harm',
+  'menyakiti diri',
+  'ingin mengakhiri',
+  'gak mau hidup',
+  'capek hidup',
+  'lelah hidup',
+  'pengen mati',
+  'mau bunuh diri',
+];
 
 class ChatService {
   late GenerativeModel _geminiModel;
@@ -22,6 +72,12 @@ class ChatService {
 
   // Groq chat history untuk multi-turn conversation
   final List<Map<String, String>> _groqHistory = [];
+
+  // Callback untuk klasifikasi yang terdeteksi
+  void Function(DistressLevel level)? onClassificationDetected;
+
+  // Callback untuk deteksi darurat
+  void Function()? onEmergencyDetected;
 
   ChatService() {
     _initializeGemini();
@@ -38,6 +94,39 @@ class ChatService {
     );
 
     _geminiSession = _geminiModel.startChat();
+  }
+
+  // ── Deteksi Darurat ────────────────────────────────────────
+
+  bool containsEmergencyKeywords(String message) {
+    final lower = message.toLowerCase();
+    return _emergencyKeywords.any((kw) => lower.contains(kw));
+  }
+
+  // ── Ekstrak Klasifikasi dari respons AI ─────────────────────
+
+  DistressLevel? _extractClassification(String response) {
+    final regex = RegExp(r'\[CLASSIFICATION:(\w+)\]');
+    final match = regex.firstMatch(response);
+    if (match != null) {
+      final level = match.group(1)!.toUpperCase();
+      switch (level) {
+        case 'RENDAH':
+          return DistressLevel.rendah;
+        case 'SEDANG':
+          return DistressLevel.sedang;
+        case 'TINGGI':
+          return DistressLevel.tinggi;
+        case 'KRITIS':
+          return DistressLevel.kritis;
+      }
+    }
+    return null;
+  }
+
+  /// Bersihkan tag klasifikasi dari respons agar tidak tampil ke user.
+  String _cleanResponse(String response) {
+    return response.replaceAll(RegExp(r'\[CLASSIFICATION:\w+\]'), '').trim();
   }
 
   // ── Gemini ──────────────────────────────────────────────────
@@ -93,18 +182,39 @@ class ChatService {
   // ── Public API ───────────────────────────────────────────────
 
   Future<String?> sendMessage(String message) async {
-    // Coba Gemini dulu
+    // Cek kata kunci darurat terlebih dahulu
+    if (containsEmergencyKeywords(message)) {
+      onEmergencyDetected?.call();
+    }
+
+    String? rawReply;
+
+    // Coba grok dulu
     try {
-      final reply = await _sendViaGemini(message);
-      if (reply != null && reply.isNotEmpty) return reply;
-      throw Exception('Empty response from Gemini');
-    } catch (geminiError) {
-      // Fallback ke Groq
+      rawReply = await _sendViaGroq(message);
+      if (rawReply == null || rawReply.isEmpty) {
+        throw Exception('Empty response from Gemini');
+      }
+    } catch (groqError) {
+      // Fallback ke gemini
       try {
-        return await _sendViaGroq(message);
-      } catch (groqError) {
+        rawReply = await _sendViaGemini(message);
+      } catch (geminiError) {
         return 'Maaf, layanan sedang tidak tersedia. Silakan coba beberapa saat lagi.';
       }
     }
+
+    if (rawReply == null) {
+      return 'Maaf, saya tidak dapat memproses permintaan kamu saat ini.';
+    }
+
+    // Ekstrak klasifikasi
+    final classification = _extractClassification(rawReply);
+    if (classification != null) {
+      onClassificationDetected?.call(classification);
+    }
+
+    // Bersihkan tag dari respons
+    return _cleanResponse(rawReply);
   }
 }

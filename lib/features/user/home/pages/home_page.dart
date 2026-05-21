@@ -1,22 +1,80 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../../../core/providers/profile_provider.dart';
+import '../../../../core/providers/classification_provider.dart';
+import '../../../../core/models/distress_classification.dart';
+import '../../chat/pages/chat_page.dart';
+import '../../emergency/pages/emergency_page.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
   @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  String? _selectedMood;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final profileProvider = Provider.of<ProfileProvider>(
+        context,
+        listen: false,
+      );
+      if (profileProvider.profile == null) {
+        profileProvider.fetchProfile();
+      }
+      try {
+        Provider.of<ClassificationProvider>(
+          context,
+          listen: false,
+        ).fetchHistory();
+      } catch (_) {}
+    });
+  }
+
+  String _getGreeting() {
+    final hour = DateTime.now().hour;
+    if (hour < 12) return 'Selamat Pagi';
+    if (hour < 15) return 'Selamat Siang';
+    if (hour < 18) return 'Selamat Sore';
+    return 'Selamat Malam';
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final profileProvider = context.watch<ProfileProvider>();
+    final nickname = profileProvider.profile?['nickname'] ?? 'Kak';
+
+    DistressLevel? currentLevel;
+    try {
+      final classProvider = context.watch<ClassificationProvider>();
+      currentLevel = classProvider.currentLevel;
+    } catch (_) {}
+
     return Scaffold(
       backgroundColor: const Color(0xffF5F7FB),
       appBar: AppBar(
         backgroundColor: const Color(0xffF5F7FB),
         elevation: 0,
         title: const Text(
-          'Mental Dashboard',
-          style: TextStyle(
-            color: Colors.black,
-            fontWeight: FontWeight.bold,
-          ),
+          'UBMentalCare',
+          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
         ),
+        actions: [
+          IconButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const EmergencyPage()),
+              );
+            },
+            icon: const Icon(Icons.emergency_rounded, color: Color(0xffFF6B6B)),
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -25,36 +83,125 @@ class HomePage extends StatelessWidget {
             // Greeting Card
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(24),
                 gradient: const LinearGradient(
                   colors: [
                     Color(0xff7F7FD5),
+                    Color(0xff86A8E7),
                     Color(0xff91EAE4),
                   ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xff7F7FD5).withOpacity(0.3),
+                    blurRadius: 20,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
               ),
-              child: const Column(
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Good Morning 👋',
-                    style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 16,
-                    ),
+                    '${_getGreeting()} 👋',
+                    style: const TextStyle(color: Colors.white70, fontSize: 16),
                   ),
-                  SizedBox(height: 8),
+                  const SizedBox(height: 8),
                   Text(
-                    'How are you feeling today?',
-                    style: TextStyle(
+                    'Hai, $nickname!',
+                    style: const TextStyle(
                       color: Colors.white,
-                      fontSize: 24,
+                      fontSize: 26,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
+                  const SizedBox(height: 4),
+                  const Text(
+                    'Bagaimana perasaanmu hari ini?',
+                    style: TextStyle(color: Colors.white70, fontSize: 15),
+                  ),
                 ],
+              ),
+            ),
+
+            const SizedBox(height: 20),
+
+            // Quick Access - Chat ResahAI
+            GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const ChatPage()),
+                );
+              },
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(
+                    color: const Color(0xFF3D8BFF).withOpacity(0.2),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.04),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 52,
+                      height: 52,
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF3D8BFF), Color(0xFF7FBBFF)],
+                        ),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: const Icon(
+                        Icons.psychology_rounded,
+                        color: Colors.white,
+                        size: 28,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'UBMentalCareAI',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          SizedBox(height: 4),
+                          Text(
+                            'Ceritakan perasaanmu, aku siap mendengarkan 🌱',
+                            style: TextStyle(
+                              color: Colors.black54,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Icon(
+                      Icons.arrow_forward_ios,
+                      color: Color(0xFF3D8BFF),
+                      size: 16,
+                    ),
+                  ],
+                ),
               ),
             ),
 
@@ -68,33 +215,36 @@ class HomePage extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'Mood Tracking',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    'Pelacakan Mood',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
-
                   const SizedBox(height: 20),
-
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: const [
-                      MoodItem(
+                    children: [
+                      _MoodItem(
                         emoji: '😄',
-                        label: 'Happy',
+                        label: 'Senang',
+                        isSelected: _selectedMood == 'Senang',
+                        onTap: () => setState(() => _selectedMood = 'Senang'),
                       ),
-                      MoodItem(
+                      _MoodItem(
                         emoji: '🙂',
-                        label: 'Calm',
+                        label: 'Tenang',
+                        isSelected: _selectedMood == 'Tenang',
+                        onTap: () => setState(() => _selectedMood = 'Tenang'),
                       ),
-                      MoodItem(
+                      _MoodItem(
                         emoji: '😐',
-                        label: 'Neutral',
+                        label: 'Biasa',
+                        isSelected: _selectedMood == 'Biasa',
+                        onTap: () => setState(() => _selectedMood = 'Biasa'),
                       ),
-                      MoodItem(
+                      _MoodItem(
                         emoji: '😔',
-                        label: 'Sad',
+                        label: 'Sedih',
+                        isSelected: _selectedMood == 'Sedih',
+                        onTap: () => setState(() => _selectedMood = 'Sedih'),
                       ),
                     ],
                   ),
@@ -104,7 +254,82 @@ class HomePage extends StatelessWidget {
 
             const SizedBox(height: 20),
 
-            // Health Stats
+            // Distress Level Card
+            if (currentLevel != null)
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(
+                    color: _getLevelColor(currentLevel).withOpacity(0.3),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.04),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Text(
+                          'Status Kesehatan Mental',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const Spacer(),
+                        Text(
+                          currentLevel.emoji,
+                          style: const TextStyle(fontSize: 24),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: _getLevelColor(currentLevel).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Level: ${currentLevel.label}',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                              color: _getLevelColor(currentLevel),
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            currentLevel.description,
+                            style: TextStyle(
+                              color: Colors.grey.shade700,
+                              fontSize: 13,
+                              height: 1.4,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+            if (currentLevel != null) const SizedBox(height: 20),
+
+            // Feature Grid
             GridView.count(
               crossAxisCount: 2,
               crossAxisSpacing: 16,
@@ -113,29 +338,29 @@ class HomePage extends StatelessWidget {
               physics: const NeverScrollableScrollPhysics(),
               childAspectRatio: 1.1,
               children: const [
-                HealthCard(
-                  title: 'Sleep',
-                  value: '7h 42m',
-                  icon: Icons.bedtime,
-                  subtitle: 'Good Sleep',
+                _FeatureCard(
+                  title: 'Latihan Napas',
+                  subtitle: 'Teknik relaksasi',
+                  icon: Icons.air,
+                  color: Color(0xff7F7FD5),
                 ),
-                HealthCard(
-                  title: 'Screen Time',
-                  value: '5h 12m',
-                  icon: Icons.phone_android,
-                  subtitle: 'Too High',
+                _FeatureCard(
+                  title: 'Meditasi',
+                  subtitle: 'Ketenangan batin',
+                  icon: Icons.self_improvement,
+                  color: Color(0xff2E7D5B),
                 ),
-                HealthCard(
-                  title: 'Steps',
-                  value: '6,421',
-                  icon: Icons.directions_walk,
-                  subtitle: 'Daily Activity',
+                _FeatureCard(
+                  title: 'Jurnal Harian',
+                  subtitle: 'Tulis perasaanmu',
+                  icon: Icons.book_rounded,
+                  color: Color(0xffF2C94C),
                 ),
-                HealthCard(
-                  title: 'Water Intake',
-                  value: '1.8L',
-                  icon: Icons.water_drop,
-                  subtitle: 'Keep Hydrated',
+                _FeatureCard(
+                  title: 'Tips Tidur',
+                  subtitle: 'Kualitas istirahat',
+                  icon: Icons.bedtime_rounded,
+                  color: Color(0xff8E9EFF),
                 ),
               ],
             ),
@@ -147,26 +372,40 @@ class HomePage extends StatelessWidget {
               width: double.infinity,
               padding: const EdgeInsets.all(20),
               decoration: _cardDecoration(),
-              child: const Column(
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'AI Insight',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFEEF4FF),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Icon(
+                          Icons.psychology_rounded,
+                          color: Color(0xFF3D8BFF),
+                          size: 20,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      const Text(
+                        'Insight dari ResahAI',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
                   ),
-
-                  SizedBox(height: 12),
-
-                  Text(
-                    'Your sleep quality improved compared to yesterday, '
-                    'but your screen time is still high at night. '
-                    'Try reducing device usage before sleeping.',
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Ingat, setiap langkah kecil yang kamu ambil menuju kesehatan mental yang lebih baik adalah pencapaian yang luar biasa. '
+                    'Jangan ragu untuk bercerita dan mencari bantuan. Kamu tidak sendirian 🌱',
                     style: TextStyle(
-                      fontSize: 15,
-                      height: 1.5,
+                      fontSize: 14,
+                      height: 1.6,
                       color: Colors.black87,
                     ),
                   ),
@@ -185,50 +424,56 @@ class HomePage extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'Daily Journal',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    'Jurnal Harian',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
-
                   const SizedBox(height: 16),
-
                   TextField(
                     maxLines: 5,
                     decoration: InputDecoration(
-                      hintText: 'Write your feelings today...',
+                      hintText: 'Tuliskan perasaanmu hari ini...',
+                      hintStyle: TextStyle(color: Colors.grey.shade400),
                       filled: true,
-                      fillColor: Colors.grey.shade100,
+                      fillColor: Colors.grey.shade50,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(16),
                         borderSide: BorderSide.none,
                       ),
                     ),
                   ),
-
                   const SizedBox(height: 16),
-
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Jurnal berhasil disimpan! 📝'),
+                            backgroundColor: Colors.green,
+                          ),
+                        );
+                      },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.black,
+                        backgroundColor: const Color(0xFF3D8BFF),
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
                         ),
                       ),
                       child: const Text(
-                        'Save Journal',
-                        style: TextStyle(color: Colors.white),
+                        'Simpan Jurnal',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ),
                 ],
               ),
             ),
+
+            const SizedBox(height: 100),
           ],
         ),
       ),
@@ -248,51 +493,75 @@ class HomePage extends StatelessWidget {
       ],
     );
   }
+
+  Color _getLevelColor(DistressLevel level) {
+    switch (level) {
+      case DistressLevel.rendah:
+        return const Color(0xff4CAF50);
+      case DistressLevel.sedang:
+        return Colors.orange;
+      case DistressLevel.tinggi:
+        return const Color(0xffFF6B6B);
+      case DistressLevel.kritis:
+        return Colors.red;
+    }
+  }
 }
 
-class MoodItem extends StatelessWidget {
+class _MoodItem extends StatelessWidget {
   final String emoji;
   final String label;
+  final bool isSelected;
+  final VoidCallback onTap;
 
-  const MoodItem({
-    super.key,
+  const _MoodItem({
     required this.emoji,
     required this.label,
+    required this.isSelected,
+    required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        CircleAvatar(
-          radius: 28,
-          backgroundColor: Colors.grey.shade100,
-          child: Text(
-            emoji,
-            style: const TextStyle(fontSize: 28),
-          ),
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        child: Column(
+          children: [
+            CircleAvatar(
+              radius: 28,
+              backgroundColor: isSelected
+                  ? const Color(0xFF3D8BFF).withOpacity(0.15)
+                  : Colors.grey.shade100,
+              child: Text(emoji, style: const TextStyle(fontSize: 28)),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              label,
+              style: TextStyle(
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                color: isSelected ? const Color(0xFF3D8BFF) : Colors.black87,
+              ),
+            ),
+          ],
         ),
-
-        const SizedBox(height: 8),
-
-        Text(label),
-      ],
+      ),
     );
   }
 }
 
-class HealthCard extends StatelessWidget {
+class _FeatureCard extends StatelessWidget {
   final String title;
-  final String value;
-  final IconData icon;
   final String subtitle;
+  final IconData icon;
+  final Color color;
 
-  const HealthCard({
-    super.key,
+  const _FeatureCard({
     required this.title,
-    required this.value,
-    required this.icon,
     required this.subtitle,
+    required this.icon,
+    required this.color,
   });
 
   @override
@@ -313,35 +582,23 @@ class HealthCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 30),
-
-          const Spacer(),
-
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
             ),
+            child: Icon(icon, size: 24, color: color),
           ),
-
-          const SizedBox(height: 4),
-
+          const Spacer(),
           Text(
             title,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-            ),
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
-
           const SizedBox(height: 4),
-
           Text(
             subtitle,
-            style: TextStyle(
-              color: Colors.grey.shade600,
-            ),
+            style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
           ),
         ],
       ),
