@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/providers/booking_provider.dart';
 import '../../../../core/models/booking.dart';
+import '../../../../core/utils/constant/app_colors.dart';
 import 'booking_detail_page.dart';
 import 'my_bookings_page.dart';
 
@@ -28,9 +29,9 @@ class _ConsultationPageState extends State<ConsultationPage> {
     final psychologists = bookingProvider.filteredPsychologists;
 
     return Scaffold(
-      backgroundColor: const Color(0xffF5F7FB),
+      backgroundColor: AppColors.netralLight,
       appBar: AppBar(
-        backgroundColor: const Color(0xffF5F7FB),
+        backgroundColor: AppColors.netralLight,
         elevation: 0,
         title: const Text(
           'Konsultasi',
@@ -63,12 +64,7 @@ class _ConsultationPageState extends State<ConsultationPage> {
             margin: const EdgeInsets.all(16),
             padding: const EdgeInsets.all(22),
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [
-                  Color(0xff8E9EFF),
-                  Color(0xff91EAE4),
-                ],
-              ),
+              gradient: AppColors.heroGradient,
               borderRadius: BorderRadius.circular(24),
             ),
             child: Row(
@@ -147,7 +143,7 @@ class _ConsultationPageState extends State<ConsultationPage> {
                     margin: const EdgeInsets.only(right: 12),
                     child: Chip(
                       backgroundColor:
-                          isSelected ? const Color(0xFF3D8BFF) : Colors.white,
+                          isSelected ? AppColors.primary : Colors.white,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14),
                       ),
@@ -251,13 +247,13 @@ class _PsychologistCard extends StatelessWidget {
             children: [
               CircleAvatar(
                 radius: 32,
-                backgroundColor: const Color(0xffDDE7FF),
+                backgroundColor: AppColors.primaryLight,
                 child: Text(
                   psychologist.name.split(' ').last[0],
                   style: const TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF3D8BFF),
+                    color: AppColors.primary,
                   ),
                 ),
               ),
@@ -338,7 +334,7 @@ class _PsychologistCard extends StatelessWidget {
             child: ElevatedButton(
               onPressed: onBook,
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF3D8BFF),
+                backgroundColor: AppColors.primary,
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(18),

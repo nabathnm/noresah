@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../../core/utils/constant/app_colors.dart';
 import '../../onboarding/pages/onboarding_page.dart';
 
 class RegisterPage extends StatefulWidget {
@@ -12,22 +13,32 @@ class RegisterPage extends StatefulWidget {
 class _RegisterPageState extends State<RegisterPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
   bool _isLoading = false;
+  bool _obscurePassword = true;
+  bool _obscureConfirm = true;
 
   Future<void> _register() async {
     try {
-      setState(() {
-        _isLoading = true;
-      });
+      setState(() => _isLoading = true);
       final email = _emailController.text.trim();
       final password = _passwordController.text.trim();
+      final confirmPassword = _confirmPasswordController.text.trim();
 
-      if (email.isEmpty || password.isEmpty) {
-        throw Exception('Please fill all fields');
+      if (email.isEmpty || password.isEmpty || confirmPassword.isEmpty) {
+        throw Exception('Harap isi semua kolom');
       }
 
       if (!email.endsWith('@student.ub.ac.id')) {
-        throw Exception('Only @student.ub.ac.id emails are allowed');
+        throw Exception('Hanya email @student.ub.ac.id yang diperbolehkan');
+      }
+
+      if (password.length < 6) {
+        throw Exception('Kata sandi minimal 6 karakter');
+      }
+
+      if (password != confirmPassword) {
+        throw Exception('Kata sandi tidak cocok');
       }
 
       await Supabase.instance.client.auth.signUp(
@@ -38,10 +49,8 @@ class _RegisterPageState extends State<RegisterPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text(
-              'Registration successful! Please complete your profile.',
-            ),
-            backgroundColor: Colors.green,
+            content: Text('Registrasi berhasil! Lengkapi profilmu.'),
+            backgroundColor: AppColors.greenNormal,
           ),
         );
         Navigator.pushReplacement(
@@ -52,21 +61,20 @@ class _RegisterPageState extends State<RegisterPage> {
     } on AuthException catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.message), backgroundColor: Colors.red),
+          SnackBar(content: Text(e.message), backgroundColor: AppColors.redNormal),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text(e.toString().replaceAll('Exception: ', '')),
+            backgroundColor: AppColors.redNormal,
+          ),
         );
       }
     } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -74,48 +82,46 @@ class _RegisterPageState extends State<RegisterPage> {
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
+    _confirmPasswordController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xffF5F7FB),
+      backgroundColor: AppColors.netralLight,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Colors.black),
+          icon: const Icon(Icons.arrow_back_ios, color: AppColors.textHeading),
           onPressed: () => Navigator.pop(context),
         ),
       ),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 24.0,
-              vertical: 16.0,
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Logo or Icon
+                // Logo
                 Center(
                   child: Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFEEF4FF),
+                      color: AppColors.primaryLight,
                       shape: BoxShape.circle,
                       border: Border.all(
-                        color: const Color(0xFFD0E4FF),
+                        color: AppColors.primaryLightActive,
                         width: 2,
                       ),
                     ),
                     child: const Icon(
                       Icons.person_add_rounded,
                       size: 64,
-                      color: Color(0xFF3D8BFF),
+                      color: AppColors.primary,
                     ),
                   ),
                 ),
@@ -125,7 +131,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   style: TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF1A1A1A),
+                    color: AppColors.textHeading,
                     letterSpacing: -0.5,
                   ),
                   textAlign: TextAlign.center,
@@ -165,20 +171,19 @@ class _RegisterPageState extends State<RegisterPage> {
                         hint: 'Kata Sandi',
                         icon: Icons.lock_outline,
                         isPassword: true,
+                        obscure: _obscurePassword,
+                        onToggleObscure: () =>
+                            setState(() => _obscurePassword = !_obscurePassword),
                       ),
                       const SizedBox(height: 16),
                       _buildTextField(
-                        controller: _passwordController,
-                        hint: 'Kata Sandi',
+                        controller: _confirmPasswordController,
+                        hint: 'Konfirmasi Kata Sandi',
                         icon: Icons.lock_outline,
                         isPassword: true,
-                      ),
-                      const SizedBox(height: 16),
-                      _buildTextField(
-                        controller: _passwordController,
-                        hint: 'Kata Sandi',
-                        icon: Icons.lock_outline,
-                        isPassword: true,
+                        obscure: _obscureConfirm,
+                        onToggleObscure: () =>
+                            setState(() => _obscureConfirm = !_obscureConfirm),
                       ),
                       const SizedBox(height: 32),
                       SizedBox(
@@ -187,7 +192,7 @@ class _RegisterPageState extends State<RegisterPage> {
                         child: ElevatedButton(
                           onPressed: _isLoading ? null : _register,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF3D8BFF),
+                            backgroundColor: AppColors.primary,
                             foregroundColor: Colors.white,
                             elevation: 0,
                             shape: RoundedRectangleBorder(
@@ -228,17 +233,19 @@ class _RegisterPageState extends State<RegisterPage> {
     required String hint,
     required IconData icon,
     bool isPassword = false,
+    bool obscure = true,
+    VoidCallback? onToggleObscure,
     TextInputType? keyboardType,
   }) {
     return TextField(
       controller: controller,
-      obscureText: isPassword,
+      obscureText: isPassword ? obscure : false,
       keyboardType: keyboardType,
       decoration: InputDecoration(
         hintText: hint,
         hintStyle: TextStyle(color: Colors.grey.shade400),
         filled: true,
-        fillColor: const Color(0xffF5F7FB),
+        fillColor: AppColors.netralLight,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide.none,
@@ -249,13 +256,20 @@ class _RegisterPageState extends State<RegisterPage> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: Color(0xFF3D8BFF), width: 1.5),
+          borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
         ),
         prefixIcon: Icon(icon, color: Colors.grey.shade500),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 20,
-          vertical: 16,
-        ),
+        suffixIcon: isPassword
+            ? IconButton(
+                icon: Icon(
+                  obscure ? Icons.visibility_off : Icons.visibility,
+                  color: Colors.grey.shade500,
+                ),
+                onPressed: onToggleObscure,
+              )
+            : null,
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       ),
     );
   }

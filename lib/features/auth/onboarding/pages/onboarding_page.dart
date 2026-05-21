@@ -252,7 +252,7 @@ class _NicknamePage extends StatelessWidget {
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(14),
-                  borderSide: const BorderSide(color: Color(0xFF3D8BFF)),
+                  borderSide: BorderSide(color: AppColors.primary),
                 ),
               ),
             ),
@@ -330,11 +330,11 @@ class _ProblemPage extends StatelessWidget {
                     vertical: 16,
                   ),
                   decoration: BoxDecoration(
-                    color: isSelected ? const Color(0xFF3D8BFF) : Colors.white,
+                    color: isSelected ? AppColors.primary : Colors.white,
                     borderRadius: BorderRadius.circular(14),
                     border: Border.all(
                       color: isSelected
-                          ? const Color(0xFF3D8BFF)
+                          ? AppColors.primary
                           : Colors.grey.shade300,
                     ),
                   ),
@@ -397,7 +397,7 @@ class _ProgressPill extends StatelessWidget {
             width: active ? 28 : 8,
             height: 6,
             decoration: BoxDecoration(
-              color: active ? const Color(0xFF3D8BFF) : Colors.grey.shade300,
+              color: active ? AppColors.primary : Colors.grey.shade300,
               borderRadius: BorderRadius.circular(99),
             ),
           );
@@ -422,7 +422,7 @@ class _BackButton extends StatelessWidget {
           height: 40,
           margin: const EdgeInsets.only(top: 8, bottom: 4),
           decoration: BoxDecoration(
-            color: const Color(0xFF3D8BFF),
+            color: AppColors.primary,
             borderRadius: BorderRadius.circular(12),
           ),
           child: const Icon(
@@ -450,7 +450,7 @@ class _PrimaryButton extends StatelessWidget {
         duration: const Duration(milliseconds: 150),
         height: 54,
         decoration: BoxDecoration(
-          color: onTap == null ? Colors.grey.shade300 : const Color(0xFF3D8BFF),
+          color: onTap == null ? Colors.grey.shade300 : AppColors.primary,
           borderRadius: BorderRadius.circular(16),
         ),
         alignment: Alignment.center,
@@ -510,10 +510,10 @@ class _MascotImage extends StatelessWidget {
           width: 130,
           height: 130,
           decoration: BoxDecoration(
-            color: const Color(0xFFEEF4FF),
+            color: AppColors.primaryLight,
             shape: BoxShape.circle,
           ),
-          child: Icon(_fallbackIcon, size: 60, color: const Color(0xFF3D8BFF)),
+          child: Icon(_fallbackIcon, size: 60, color: AppColors.primary),
         ),
       ),
     );

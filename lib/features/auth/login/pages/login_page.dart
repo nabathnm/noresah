@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../../core/utils/constant/app_colors.dart';
 import '../../register/pages/register_page.dart';
 import '../../../user/widgets/navigation.dart';
+import '../../../psikolog/widgets/psikolog_navigation.dart';
+
+enum LoginRole { user, psikolog }
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -14,17 +18,31 @@ class _LoginPageState extends State<LoginPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
+  bool _obscurePassword = true;
+  LoginRole _selectedRole = LoginRole.user;
+
+  String get _emailDomain => _selectedRole == LoginRole.user
+      ? '@student.ub.ac.id'
+      : '@psychologist.ub.ac.id';
 
   Future<void> _login() async {
     try {
-      setState(() {
-        _isLoading = true;
-      });
+      setState(() => _isLoading = true);
       final email = _emailController.text.trim();
       final password = _passwordController.text.trim();
 
       if (email.isEmpty || password.isEmpty) {
-        throw Exception('Please fill all fields');
+        throw Exception('Harap isi semua kolom');
+      }
+
+      // Validasi domain email sesuai role
+      if (_selectedRole == LoginRole.user &&
+          !email.endsWith('@student.ub.ac.id')) {
+        throw Exception('Email user harus berakhir @student.ub.ac.id');
+      }
+      if (_selectedRole == LoginRole.psikolog &&
+          !email.endsWith('@psychologist.ub.ac.id')) {
+        throw Exception('Email psikolog harus berakhir @psychologist.ub.ac.id');
       }
 
       await Supabase.instance.client.auth.signInWithPassword(
@@ -33,29 +51,36 @@ class _LoginPageState extends State<LoginPage> {
       );
 
       if (mounted) {
+        // Route berbeda berdasarkan role
+        final destination = _selectedRole == LoginRole.user
+            ? const Navigation()
+            : const PsikologNavigation();
+
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const Navigation()),
+          MaterialPageRoute(builder: (context) => destination),
         );
       }
     } on AuthException catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.message), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text(e.message),
+            backgroundColor: AppColors.redNormal,
+          ),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text(e.toString().replaceAll('Exception: ', '')),
+            backgroundColor: AppColors.redNormal,
+          ),
         );
       }
     } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -69,28 +94,34 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xffF5F7FB),
+      backgroundColor: AppColors.netralLight,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 24.0,
+              vertical: 32.0,
+            ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Logo or Icon
+                // Logo
                 Center(
                   child: Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFEEF4FF),
+                      color: AppColors.primaryLight,
                       shape: BoxShape.circle,
-                      border: Border.all(color: const Color(0xFFD0E4FF), width: 2),
+                      border: Border.all(
+                        color: AppColors.primaryLightActive,
+                        width: 2,
+                      ),
                     ),
                     child: const Icon(
                       Icons.self_improvement_rounded,
                       size: 64,
-                      color: Color(0xFF3D8BFF),
+                      color: AppColors.primary,
                     ),
                   ),
                 ),
@@ -100,7 +131,7 @@ class _LoginPageState extends State<LoginPage> {
                   style: TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF1A1A1A),
+                    color: AppColors.textHeading,
                     letterSpacing: -0.5,
                   ),
                   textAlign: TextAlign.center,
@@ -111,7 +142,40 @@ class _LoginPageState extends State<LoginPage> {
                   style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 48),
+                const SizedBox(height: 32),
+
+                // Role Toggle
+                Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.03),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      _buildRoleTab(
+                        label: 'Mahasiswa',
+                        icon: Icons.school_rounded,
+                        role: LoginRole.user,
+                      ),
+                      _buildRoleTab(
+                        label: 'Psikolog',
+                        icon: Icons.psychology_rounded,
+                        role: LoginRole.psikolog,
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 24),
+
                 // Form Container
                 Container(
                   padding: const EdgeInsets.all(24),
@@ -130,7 +194,7 @@ class _LoginPageState extends State<LoginPage> {
                     children: [
                       _buildTextField(
                         controller: _emailController,
-                        hint: 'Email (@student.ub.ac.id)',
+                        hint: 'Email ($_emailDomain)',
                         icon: Icons.email_outlined,
                         keyboardType: TextInputType.emailAddress,
                       ),
@@ -148,7 +212,7 @@ class _LoginPageState extends State<LoginPage> {
                         child: ElevatedButton(
                           onPressed: _isLoading ? null : _login,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF3D8BFF),
+                            backgroundColor: AppColors.primary,
                             foregroundColor: Colors.white,
                             elevation: 0,
                             shape: RoundedRectangleBorder(
@@ -177,34 +241,75 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 ),
                 const SizedBox(height: 32),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Belum punya akun? ',
-                      style: TextStyle(color: Colors.grey.shade600),
-                    ),
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const RegisterPage(),
+                if (_selectedRole == LoginRole.user)
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'Belum punya akun? ',
+                        style: TextStyle(color: Colors.grey.shade600),
+                      ),
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const RegisterPage(),
+                            ),
+                          );
+                        },
+                        child: const Text(
+                          'Daftar di sini',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.primary,
                           ),
-                        );
-                      },
-                      child: const Text(
-                        'Daftar di sini',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF3D8BFF),
                         ),
                       ),
-                    ),
-                  ],
-                ),
+                    ],
+                  ),
               ],
             ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRoleTab({
+    required String label,
+    required IconData icon,
+    required LoginRole role,
+  }) {
+    final isSelected = _selectedRole == role;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => setState(() => _selectedRole = role),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          decoration: BoxDecoration(
+            color: isSelected ? AppColors.primary : Colors.transparent,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                icon,
+                size: 20,
+                color: isSelected ? Colors.white : Colors.grey.shade600,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: isSelected ? Colors.white : Colors.grey.shade600,
+                  fontSize: 14,
+                ),
+              ),
+            ],
           ),
         ),
       ),
@@ -220,13 +325,13 @@ class _LoginPageState extends State<LoginPage> {
   }) {
     return TextField(
       controller: controller,
-      obscureText: isPassword,
+      obscureText: isPassword ? _obscurePassword : false,
       keyboardType: keyboardType,
       decoration: InputDecoration(
         hintText: hint,
         hintStyle: TextStyle(color: Colors.grey.shade400),
         filled: true,
-        fillColor: const Color(0xffF5F7FB),
+        fillColor: AppColors.netralLight,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide.none,
@@ -237,10 +342,23 @@ class _LoginPageState extends State<LoginPage> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: Color(0xFF3D8BFF), width: 1.5),
+          borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
         ),
         prefixIcon: Icon(icon, color: Colors.grey.shade500),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        suffixIcon: isPassword
+            ? IconButton(
+                icon: Icon(
+                  _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                  color: Colors.grey.shade500,
+                ),
+                onPressed: () =>
+                    setState(() => _obscurePassword = !_obscurePassword),
+              )
+            : null,
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 20,
+          vertical: 16,
+        ),
       ),
     );
   }

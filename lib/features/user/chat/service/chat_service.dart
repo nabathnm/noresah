@@ -41,9 +41,9 @@ Di AKHIR setiap respons, tambahkan tag tersembunyi dengan format:
 [CLASSIFICATION:LEVEL] dimana LEVEL adalah salah satu dari: RENDAH, SEDANG, TINGGI, KRITIS
 
 Kriteria:
-- RENDAH: Pengguna hanya curhat ringan, butuh motivasi
-- SEDANG: Ada tanda stres atau kecemasan sedang, butuh teknik coping
-- TINGGI: Stres berat, gejala depresi, butuh saran konsultasi profesional
+- AMAN: Pengguna hanya curhat ringan, butuh motivasi
+- WASPADA: Ada tanda stres atau kecemasan sedang, butuh teknik coping
+- KHAWATIR: Stres berat, gejala depresi, butuh saran konsultasi profesional
 - KRITIS: Ada indikasi bahaya pada diri sendiri, butuh intervensi darurat
 ''';
 
