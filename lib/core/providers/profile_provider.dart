@@ -15,30 +15,7 @@ class ProfileProvider with ChangeNotifier {
   String? _error;
   String? get error => _error;
 
-    try {
-      final user = _supabase.auth.currentUser;
-      if (user == null) throw Exception('User tidak ditemukan');
 
-      final profileData = {
-        'id': user.id, // ← ganti 'user_id' → 'id'
-        'nickname': nickname,
-        'problem_preferences': problemPreferences,
-        'gender': gender ? 'female' : 'male',
-        'birth_date': birthDate.toIso8601String().split('T')[0],
-        'created_at': DateTime.now().toIso8601String(),
-      };
-
-      final response = await _supabase
-          .from('profiles')
-          .insert(profileData)
-          .select()
-          .single();
-      _profile = response;
-    } catch (e) {
-      debugPrint('Error creating profile: $e');
-      rethrow;
-    } finally {
-      _isLoading = false;
   /// Whether the current user has completed onboarding
   bool get isOnboardingCompleted => _profile?.isOnboardingCompleted ?? false;
 
