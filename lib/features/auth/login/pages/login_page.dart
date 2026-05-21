@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/utils/widgets/auth_gate.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/utils/constant/app_colors.dart';
 import '../../register/pages/register_page.dart';

@@ -106,7 +106,7 @@ class _ForumDetailPageState extends State<ForumDetailPage> {
                           ],
                         ),
                       ),
-                      if (widget.post.mood != null)
+                      if (widget.post.title != null)
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 10,
@@ -117,7 +117,7 @@ class _ForumDetailPageState extends State<ForumDetailPage> {
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(
-                            widget.post.mood!,
+                            widget.post.title!,
                             style: const TextStyle(fontSize: 12),
                           ),
                         ),
@@ -158,7 +158,7 @@ class _ForumDetailPageState extends State<ForumDetailPage> {
                       Icon(Icons.favorite_border,
                           size: 18, color: Colors.grey.shade600),
                       const SizedBox(width: 4),
-                      Text('${widget.post.likes}',
+                      Text('0', // Likes dihapus dari skema
                           style: TextStyle(color: Colors.grey.shade600)),
                       const SizedBox(width: 16),
                       const Icon(Icons.psychology_rounded,

@@ -272,7 +272,7 @@ class _ForumPageState extends State<ForumPage> {
 
                           final success = await forum.createPost(
                             content: content,
-                            mood: selectedMood,
+                            title: selectedMood,
                             category: selectedCategory,
                           );
 
@@ -558,7 +558,7 @@ class _ForumPostCard extends StatelessWidget {
                 ),
               ),
 
-              if (post.mood != null)
+              if (post.title != null)
                 Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 12,
@@ -569,7 +569,7 @@ class _ForumPostCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(14),
                   ),
                   child: Text(
-                    post.mood!,
+                    post.title!,
                     style: const TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
@@ -623,7 +623,7 @@ class _ForumPostCard extends StatelessWidget {
                 },
                 child: _ActionButton(
                   icon: Icons.favorite_border,
-                  label: '${post.likes}',
+                  label: '0', // Likes dihapus dari skema
                 ),
               ),
 

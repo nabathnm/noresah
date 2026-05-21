@@ -3,10 +3,9 @@
 class ForumPost {
   final String? id;
   final String userId;
+  final String? title;
   final String content;
-  final String? mood;
   final String category;
-  final int likes;
   final int answerCount;
   final DateTime createdAt;
   final List<ForumAnswer> answers;
@@ -14,22 +13,19 @@ class ForumPost {
   ForumPost({
     this.id,
     required this.userId,
+    this.title,
     required this.content,
-    this.mood,
     this.category = 'General',
-    this.likes = 0,
     this.answerCount = 0,
     required this.createdAt,
     this.answers = const [],
   });
 
   Map<String, dynamic> toJson() => {
+        if (title != null) 'title': title,
         'user_id': userId,
         'content': content,
-        'mood': mood,
         'category': category,
-        'likes': likes,
-        'answer_count': answerCount,
         'created_at': createdAt.toIso8601String(),
       };
 
@@ -37,11 +33,12 @@ class ForumPost {
     return ForumPost(
       id: json['id']?.toString(),
       userId: json['user_id'] ?? '',
+      title: json['title'],
       content: json['content'] ?? '',
-      mood: json['mood'],
       category: json['category'] ?? 'General',
-      likes: json['likes'] ?? 0,
-      answerCount: json['answer_count'] ?? json['comments'] ?? 0,
+      answerCount: json['forum_replies'] != null && json['forum_replies'] is List
+          ? (json['forum_replies'] as List).length
+          : 0,
       createdAt: DateTime.tryParse(json['created_at'] ?? '') ?? DateTime.now(),
     );
   }
@@ -61,7 +58,7 @@ class ForumPost {
 /// Hanya role psikolog yang bisa membuat ForumAnswer.
 class ForumAnswer {
   final String? id;
-  final String postId;
+  final String forumId;
   final String userId;
   final String content;
   final String psychologistName;
@@ -69,28 +66,32 @@ class ForumAnswer {
 
   ForumAnswer({
     this.id,
-    required this.postId,
+    required this.forumId,
     required this.userId,
     required this.content,
-    required this.psychologistName,
+    this.psychologistName = 'Psikolog',
     required this.createdAt,
   });
 
   Map<String, dynamic> toJson() => {
-        'post_id': postId,
+        'forum_id': forumId,
         'user_id': userId,
         'content': content,
-        'psychologist_name': psychologistName,
         'created_at': createdAt.toIso8601String(),
       };
 
   factory ForumAnswer.fromJson(Map<String, dynamic> json) {
+    String pName = 'Psikolog';
+    if (json['profiles'] != null && json['profiles']['nickname'] != null) {
+      pName = json['profiles']['nickname'];
+    }
+
     return ForumAnswer(
       id: json['id']?.toString(),
-      postId: json['post_id'] ?? '',
+      forumId: json['forum_id']?.toString() ?? '',
       userId: json['user_id'] ?? '',
       content: json['content'] ?? '',
-      psychologistName: json['psychologist_name'] ?? 'Psikolog',
+      psychologistName: pName,
       createdAt: DateTime.tryParse(json['created_at'] ?? '') ?? DateTime.now(),
     );
   }
