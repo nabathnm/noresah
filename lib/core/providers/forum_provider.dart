@@ -36,14 +36,14 @@ class ForumProvider with ChangeNotifier {
 
     try {
       var query = _supabase
-          .from('forum_posts')
-          .select()
+          .from('forum')
+          .select('*, forum_replies(id)')
           .order('created_at', ascending: false);
 
       if (_selectedCategory != 'All') {
         query = _supabase
-            .from('forum_posts')
-            .select()
+            .from('forum')
+            .select('*, forum_replies(id)')
             .eq('category', _selectedCategory)
             .order('created_at', ascending: false);
       }
@@ -54,7 +54,6 @@ class ForumProvider with ChangeNotifier {
           .toList();
     } catch (e) {
       debugPrint('Error fetching forum posts: $e');
-      // Gunakan data dummy jika Supabase belum siap
       _posts = _getDummyPosts();
     } finally {
       _isLoading = false;
@@ -66,9 +65,9 @@ class ForumProvider with ChangeNotifier {
   Future<List<ForumAnswer>> fetchAnswers(String postId) async {
     try {
       final response = await _supabase
-          .from('forum_answers')
-          .select()
-          .eq('post_id', postId)
+          .from('forum_replies')
+          .select('*, profiles(nickname)')
+          .eq('forum_id', int.parse(postId))
           .order('created_at', ascending: true);
 
       return (response as List)
@@ -91,35 +90,28 @@ class ForumProvider with ChangeNotifier {
       if (user == null) return false;
 
       final answer = ForumAnswer(
-        postId: postId,
+        forumId: postId,
         userId: user.id,
         content: content,
         psychologistName: psychologistName,
         createdAt: DateTime.now(),
       );
 
-      await _supabase.from('forum_answers').insert(answer.toJson());
+      await _supabase.from('forum_replies').insert(answer.toJson());
 
-      // Update answer count
+      // Update answer count di lokal
       final idx = _posts.indexWhere((p) => p.id == postId);
       if (idx != -1) {
         final post = _posts[idx];
         _posts[idx] = ForumPost(
           id: post.id,
           userId: post.userId,
+          title: post.title,
           content: post.content,
-          mood: post.mood,
           category: post.category,
-          likes: post.likes,
           answerCount: post.answerCount + 1,
           createdAt: post.createdAt,
         );
-
-        // Update count di database
-        await _supabase
-            .from('forum_posts')
-            .update({'answer_count': post.answerCount + 1})
-            .eq('id', postId);
       }
 
       notifyListeners();
@@ -133,38 +125,36 @@ class ForumProvider with ChangeNotifier {
   /// Buat post baru secara anonim (hanya user)
   Future<bool> createPost({
     required String content,
-    String? mood,
+    String? title,
     String category = 'General',
   }) async {
     try {
       final user = _supabase.auth.currentUser;
       if (user == null) return false;
 
-      // Cek PII sederhana
       if (_containsPII(content)) {
         return false;
       }
 
       final post = ForumPost(
         userId: user.id,
+        title: title,
         content: content,
-        mood: mood,
         category: category,
         createdAt: DateTime.now(),
       );
 
-      await _supabase.from('forum_posts').insert(post.toJson());
+      await _supabase.from('forum').insert(post.toJson());
       await fetchPosts();
       return true;
     } catch (e) {
       debugPrint('Error creating post: $e');
-      // Tambah ke local jika Supabase gagal
       _posts.insert(
         0,
         ForumPost(
           userId: 'local',
+          title: title,
           content: content,
-          mood: mood,
           category: category,
           createdAt: DateTime.now(),
         ),
@@ -174,54 +164,45 @@ class ForumProvider with ChangeNotifier {
     }
   }
 
-  /// Toggle like pada post
+  /// Toggle like pada post (Lokal Saja karena tabel likes tidak ada di schema)
   Future<void> toggleLike(String postId) async {
     final idx = _posts.indexWhere((p) => p.id == postId);
     if (idx == -1) return;
 
-    try {
-      final post = _posts[idx];
-      final newLikes = post.likes + 1;
-      await _supabase
-          .from('forum_posts')
-          .update({'likes': newLikes})
-          .eq('id', postId);
-
-      _posts[idx] = ForumPost(
-        id: post.id,
-        userId: post.userId,
-        content: post.content,
-        mood: post.mood,
-        category: post.category,
-        likes: newLikes,
-        answerCount: post.answerCount,
-        createdAt: post.createdAt,
-      );
-      notifyListeners();
-    } catch (e) {
-      debugPrint('Error toggling like: $e');
-    }
+    final post = _posts[idx];
+    _posts[idx] = ForumPost(
+      id: post.id,
+      userId: post.userId,
+      title: post.title,
+      content: post.content,
+      category: post.category,
+      answerCount: post.answerCount,
+      createdAt: post.createdAt,
+    );
+    notifyListeners();
   }
 
   /// Ambil posts yang belum dijawab (untuk dashboard psikolog)
   Future<List<ForumPost>> fetchUnansweredPosts() async {
     try {
+      // Supabase tidak bisa memfilter count relasi secara langsung dengan mudah tanpa view.
+      // Filter lokal untuk demo:
       final response = await _supabase
-          .from('forum_posts')
-          .select()
-          .eq('answer_count', 0)
+          .from('forum')
+          .select('*, forum_replies(id)')
           .order('created_at', ascending: false);
 
-      return (response as List)
+      final List<ForumPost> allPosts = (response as List)
           .map((json) => ForumPost.fromJson(json))
           .toList();
+
+      return allPosts.where((p) => p.answerCount == 0).toList();
     } catch (e) {
       debugPrint('Error fetching unanswered posts: $e');
       return _getDummyPosts().where((p) => p.answerCount == 0).toList();
     }
   }
 
-  /// Deteksi sederhana PII (nama, email, nomor telepon)
   bool _containsPII(String text) {
     final emailRegex = RegExp(
       r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}',
@@ -236,33 +217,30 @@ class ForumProvider with ChangeNotifier {
       ForumPost(
         id: '1',
         userId: 'anon1',
+        title: 'Merasa Lelah',
         content:
             'Akhir-akhir ini aku merasa lelah karena tugas kuliah dan overthinking setiap malam.',
-        mood: '😔 Merasa Lelah',
         category: 'Stress',
-        likes: 24,
         answerCount: 1,
         createdAt: DateTime.now().subtract(const Duration(minutes: 2)),
       ),
       ForumPost(
         id: '2',
         userId: 'anon2',
+        title: 'Berusaha Lebih Baik',
         content:
             'Hari ini akhirnya aku keluar rumah untuk jalan-jalan setelah berhari-hari di dalam kamar.',
-        mood: '🙂 Berusaha Lebih Baik',
         category: 'Motivation',
-        likes: 41,
         answerCount: 0,
         createdAt: DateTime.now().subtract(const Duration(minutes: 12)),
       ),
       ForumPost(
         id: '3',
         userId: 'anon3',
+        title: 'Pencapaian Kecil',
         content:
             'Aku berhasil tidur sebelum tengah malam hari ini dan rasanya benar-benar menyegarkan.',
-        mood: '😄 Pencapaian Kecil',
         category: 'Sleep',
-        likes: 63,
         answerCount: 2,
         createdAt: DateTime.now().subtract(const Duration(hours: 1)),
       ),
