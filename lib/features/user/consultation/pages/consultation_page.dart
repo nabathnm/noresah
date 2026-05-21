@@ -232,7 +232,9 @@ class _PsychologistCard extends StatelessWidget {
                 radius: 32,
                 backgroundColor: AppColors.primaryLight,
                 child: Text(
-                  psychologist.name.split(' ').last[0],
+                  psychologist.name.isNotEmpty
+                      ? psychologist.name.split(' ').last[0]
+                      : 'P',
                   style: const TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
@@ -259,11 +261,13 @@ class _PsychologistCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      psychologist.experience,
+                      psychologist.bio ?? psychologist.experience,
                       style: TextStyle(
                         color: Colors.grey.shade600,
                         fontSize: 13,
                       ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),

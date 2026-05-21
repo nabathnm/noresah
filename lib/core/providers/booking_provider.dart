@@ -47,16 +47,21 @@ class BookingProvider with ChangeNotifier {
 
     if (_selectedCategory != 'All') {
       result = result
-          .where((p) =>
-              p.specialist.toLowerCase().contains(_selectedCategory.toLowerCase()))
+          .where(
+            (p) => p.specialist.toLowerCase().contains(
+              _selectedCategory.toLowerCase(),
+            ),
+          )
           .toList();
     }
 
     if (_searchQuery.isNotEmpty) {
       result = result
-          .where((p) =>
-              p.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-              p.specialist.toLowerCase().contains(_searchQuery.toLowerCase()))
+          .where(
+            (p) =>
+                p.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+                p.specialist.toLowerCase().contains(_searchQuery.toLowerCase()),
+          )
           .toList();
     }
 
@@ -70,17 +75,15 @@ class BookingProvider with ChangeNotifier {
 
     try {
       final response = await _supabase
-          .from('psychologists')
-          .select()
-          .eq('is_available', true);
+          .from('psychologist_profiles')
+          .select('*, profiles(nickname)');
 
       _psychologists = (response as List)
           .map((json) => Psychologist.fromJson(json))
           .toList();
     } catch (e) {
       debugPrint('Error fetching psychologists: $e');
-      // Gunakan data dummy
-      _psychologists = _getDummyPsychologists();
+      _psychologists = [];
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -114,20 +117,7 @@ class BookingProvider with ChangeNotifier {
       return true;
     } catch (e) {
       debugPrint('Error creating booking: $e');
-      // Simpan secara lokal
-      _bookings.insert(
-        0,
-        Booking(
-          userId: 'local',
-          psychologistId: psychologist.id,
-          psychologistName: psychologist.name,
-          scheduledAt: scheduledAt,
-          notes: notes,
-          createdAt: DateTime.now(),
-        ),
-      );
-      notifyListeners();
-      return true;
+      return false;
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -142,9 +132,10 @@ class BookingProvider with ChangeNotifier {
 
       final response = await _supabase
           .from('bookings')
-          .select()
+          .select('*, profiles(nickname), psychologist_profiles(profiles(nickname))')
           .eq('user_id', user.id)
-          .order('scheduled_at', ascending: false);
+          .order('booking_date', ascending: false)
+          .order('start_time', ascending: false);
 
       _bookings = (response as List)
           .map((json) => Booking.fromJson(json))
@@ -164,29 +155,75 @@ class BookingProvider with ChangeNotifier {
       final user = _supabase.auth.currentUser;
       if (user == null) return;
 
+      // Lookup the psychologist's integer ID
+      final psychProfile = await _supabase
+          .from('psychologist_profiles')
+          .select('id')
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+      if (psychProfile == null) {
+        _psychologistBookings = [];
+        return;
+      }
+      final int psychId = psychProfile['id'] as int;
+
       final response = await _supabase
           .from('bookings')
-          .select()
-          .eq('psychologist_id', user.id)
-          .order('scheduled_at', ascending: false);
+          .select('*, profiles(nickname), psychologist_profiles(profiles(nickname))')
+          .eq('psychologist_id', psychId)
+          .order('booking_date', ascending: false)
+          .order('start_time', ascending: false);
 
       _psychologistBookings = (response as List)
           .map((json) => Booking.fromJson(json))
           .toList();
     } catch (e) {
       debugPrint('Error fetching psychologist bookings: $e');
+      _psychologistBookings = [];
     } finally {
       _isLoading = false;
       notifyListeners();
     }
   }
 
+  /// Ambil jadwal booking yang sudah terisi untuk seorang psikolog pada tanggal tertentu
+  Future<List<TimeOfDay>> fetchBookingsForPsychologist(int psychId, DateTime date) async {
+    try {
+      final dateString = "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
+      final response = await _supabase
+          .from('bookings')
+          .select('start_time')
+          .eq('psychologist_id', psychId)
+          .eq('booking_date', dateString)
+          .not('status', 'eq', 'cancelled');
+
+      final List<TimeOfDay> bookedSlots = [];
+      for (var row in (response as List)) {
+        if (row['start_time'] != null) {
+          final timeParts = row['start_time'].toString().split(':');
+          if (timeParts.length >= 2) {
+            bookedSlots.add(TimeOfDay(
+              hour: int.parse(timeParts[0]),
+              minute: int.parse(timeParts[1]),
+            ));
+          }
+        }
+      }
+      return bookedSlots;
+    } catch (e) {
+      debugPrint('Error fetching psychologist slots: $e');
+      return [];
+    }
+  }
+
   /// Psikolog mengkonfirmasi booking
-  Future<bool> confirmBooking(String bookingId) async {
+  Future<bool> confirmBooking(int bookingId) async {
     try {
       await _supabase
           .from('bookings')
-          .update({'status': 'confirmed'}).eq('id', bookingId);
+          .update({'status': 'confirmed'})
+          .eq('id', bookingId);
       await fetchPsychologistBookings();
       return true;
     } catch (e) {
@@ -196,11 +233,12 @@ class BookingProvider with ChangeNotifier {
   }
 
   /// Batalkan booking
-  Future<bool> cancelBooking(String bookingId) async {
+  Future<bool> cancelBooking(int bookingId) async {
     try {
       await _supabase
           .from('bookings')
-          .update({'status': 'cancelled'}).eq('id', bookingId);
+          .update({'status': 'cancelled'})
+          .eq('id', bookingId);
       await fetchBookings();
       await fetchPsychologistBookings();
       return true;
@@ -211,43 +249,7 @@ class BookingProvider with ChangeNotifier {
   }
 
   /// Hitung jumlah booking pending (untuk dashboard psikolog)
-  int get pendingBookingsCount =>
-      _psychologistBookings.where((b) => b.status == BookingStatus.pending).length;
-
-  List<Psychologist> _getDummyPsychologists() {
-    return [
-      Psychologist(
-        id: '1',
-        name: 'Dr. Sarah Wijaya',
-        specialist: 'Anxiety & Stress',
-        experience: '6 Tahun Pengalaman',
-        rating: 4.9,
-        price: 'Rp120K/sesi',
-      ),
-      Psychologist(
-        id: '2',
-        name: 'Dr. Michael Adrian',
-        specialist: 'Depression & Burnout',
-        experience: '8 Tahun Pengalaman',
-        rating: 4.8,
-        price: 'Rp150K/sesi',
-      ),
-      Psychologist(
-        id: '3',
-        name: 'Dr. Olivia Chen',
-        specialist: 'Sleep & Emotional Health',
-        experience: '5 Tahun Pengalaman',
-        rating: 4.9,
-        price: 'Rp135K/sesi',
-      ),
-      Psychologist(
-        id: '4',
-        name: 'Dr. Ahmad Fauzi',
-        specialist: 'Anxiety & Self-Esteem',
-        experience: '7 Tahun Pengalaman',
-        rating: 4.7,
-        price: 'Rp125K/sesi',
-      ),
-    ];
-  }
+  int get pendingBookingsCount => _psychologistBookings
+      .where((b) => b.status == BookingStatus.pending)
+      .length;
 }

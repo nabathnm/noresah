@@ -5,8 +5,10 @@ import '../../../../core/utils/constant/app_colors.dart';
 import '../../register/pages/register_page.dart';
 import '../../../user/widgets/navigation.dart';
 import '../../../psikolog/widgets/psikolog_navigation.dart';
+import '../../../../core/utils/widgets/auth_gate.dart';
 
 enum LoginRole { user, psikolog }
+
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 

@@ -5,6 +5,7 @@ import '../providers/onboarding_provider.dart';
 import '../../../../core/providers/profile_provider.dart';
 import '../../../../core/utils/constant/app_colors.dart';
 import '../../../user/widgets/navigation.dart';
+import '../../../../core/utils/constant/app_colors.dart';
 
 
 class OnboardingPage extends StatefulWidget {

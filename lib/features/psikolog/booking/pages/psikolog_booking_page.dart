@@ -196,9 +196,9 @@ class _BookingManageCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Mahasiswa UB',
-                      style: TextStyle(
+                    Text(
+                      booking.userNickname ?? 'Mahasiswa UB',
+                      style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
                       ),
