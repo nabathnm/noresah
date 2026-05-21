@@ -1,23 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../models/profile_model.dart';
+import '../services/profile_service.dart';
 
 class ProfileProvider with ChangeNotifier {
-  final SupabaseClient _supabase = Supabase.instance.client;
+  final ProfileService _profileService = ProfileService();
 
-  Map<String, dynamic>? _profile;
-  Map<String, dynamic>? get profile => _profile;
+  ProfileModel? _profile;
+  ProfileModel? get profile => _profile;
 
   bool _isLoading = false;
   bool get isLoading => _isLoading;
 
-  Future<void> createProfile({
-    required String nickname,
-    required int problemPreferences,
-    required bool gender,
-    required DateTime birthDate,
-  }) async {
-    _isLoading = true;
-    notifyListeners();
+  String? _error;
+  String? get error => _error;
 
     try {
       final user = _supabase.auth.currentUser;
@@ -43,28 +39,78 @@ class ProfileProvider with ChangeNotifier {
       rethrow;
     } finally {
       _isLoading = false;
-      notifyListeners();
-    }
-  }
+  /// Whether the current user has completed onboarding
+  bool get isOnboardingCompleted => _profile?.isOnboardingCompleted ?? false;
 
+  /// Current authenticated user's ID
+  String? get _currentUserId => Supabase.instance.client.auth.currentUser?.id;
+
+  /// Fetch the profile for the currently authenticated user
   Future<void> fetchProfile() async {
+    final userId = _currentUserId;
+    if (userId == null) {
+      _error = 'User not authenticated';
+      notifyListeners();
+      return;
+    }
+
     _isLoading = true;
+    _error = null;
     notifyListeners();
+
     try {
-      final user = _supabase.auth.currentUser;
-      if (user != null) {
-        final response = await _supabase
-            .from('profiles')
-            .select()
-            .eq('id', user.id) // ← ganti 'user_id' → 'id'
-            .single();
-        _profile = response;
-      }
+      _profile = await _profileService.fetchProfile(userId);
     } catch (e) {
-      debugPrint('Error fetching profile: $e');
+      _error = 'Error fetching profile: $e';
+      debugPrint(_error);
     } finally {
       _isLoading = false;
       notifyListeners();
     }
+  }
+
+  /// Update profile info (nickname, gender, birth_date)
+  Future<void> updateProfileInfo({
+    required String nickname,
+    required String gender,
+    required DateTime birthDate,
+  }) async {
+    final userId = _currentUserId;
+    if (userId == null) throw Exception('User not authenticated');
+
+    await _profileService.updateProfileInfo(
+      userId: userId,
+      nickname: nickname,
+      gender: gender,
+      birthDate: birthDate,
+    );
+
+    // Update local state
+    _profile = _profile?.copyWith(
+      nickname: nickname,
+      gender: gender,
+      birthDate: birthDate,
+    );
+    notifyListeners();
+  }
+
+  /// Mark onboarding as completed
+  Future<void> completeOnboarding() async {
+    final userId = _currentUserId;
+    if (userId == null) throw Exception('User not authenticated');
+
+    await _profileService.completeOnboarding(userId);
+
+    // Update local state
+    _profile = _profile?.copyWith(isOnboardingCompleted: true);
+    notifyListeners();
+  }
+
+  /// Clear profile data (e.g., on logout)
+  void clear() {
+    _profile = null;
+    _error = null;
+    _isLoading = false;
+    notifyListeners();
   }
 }

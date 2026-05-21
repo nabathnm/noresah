@@ -9,6 +9,8 @@ import 'core/providers/journal_provider.dart';
 import 'core/providers/chat_provider.dart';
 import 'core/utils/constant/app_colors.dart';
 import 'features/auth/login/pages/login_page.dart';
+import 'features/auth/onboarding/providers/onboarding_provider.dart';
+import 'core/utils/widgets/auth_gate.dart';
 
 class App extends StatelessWidget {
   const App({super.key});
@@ -58,6 +60,16 @@ class App extends StatelessWidget {
           ),
         ),
         home: const LoginPage(),
+        home: const LoginPage(), // atau cek session auth di sini
+        ChangeNotifierProvider(create: (_) => OnboardingProvider()),
+      ],
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        title: 'Noresah',
+        theme: ThemeData(
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        ),
+        home: const AuthGate(),
       ),
     );
   }

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import '../providers/onboarding_provider.dart';
 import '../../../../core/providers/profile_provider.dart';
 import '../../../user/widgets/navigation.dart';
-import '../../../../core/utils/constant/app_colors.dart';
+
 
 class OnboardingPage extends StatefulWidget {
   const OnboardingPage({super.key});
@@ -15,15 +17,14 @@ class _OnboardingPageState extends State<OnboardingPage> {
   final PageController _pageController = PageController();
   final _nicknameController = TextEditingController();
 
-  int _currentPage = 0;
-  String? _selectedProblem;
-
-  final List<String> _problemOptions = [
-    'Mengurangi stress',
-    'Overthinking',
-    'Burnout',
-    'Anxiety',
-  ];
+  @override
+  void initState() {
+    super.initState();
+    // Load problem preferences when page initializes
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<OnboardingProvider>().loadPreferences();
+    });
+  }
 
   @override
   void dispose() {
@@ -31,6 +32,8 @@ class _OnboardingPageState extends State<OnboardingPage> {
     _nicknameController.dispose();
     super.dispose();
   }
+
+
 
   void _nextPage() {
     _pageController.nextPage(
@@ -46,85 +49,144 @@ class _OnboardingPageState extends State<OnboardingPage> {
     );
   }
 
-  void _submit() async {
-    if (_nicknameController.text.trim().isEmpty) {
+  // ── Slide 2 → Save profile info then go to slide 3 ──
+  Future<void> _onSlide2Next() async {
+    final provider = context.read<OnboardingProvider>();
+
+    if (!provider.isSlide2Valid) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Nama panggilan tidak boleh kosong')),
+        const SnackBar(
+          content: Text('Lengkapi semua data terlebih dahulu'),
+          backgroundColor: Colors.red,
+        ),
       );
       return;
     }
-    if (_selectedProblem == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Pilih masalah yang ingin kamu atasi')),
-      );
-      return;
-    }
 
-    final profileProvider = Provider.of<ProfileProvider>(
-      context,
-      listen: false,
-    );
+    final success = await provider.saveProfileInfo();
 
-    try {
-      await profileProvider.createProfile(
-        nickname: _nicknameController.text.trim(),
-        problemPreferences: _problemOptions.indexOf(_selectedProblem!) + 1,
-        gender: true,
-        birthDate: DateTime(2000),
-      );
-
-      if (mounted) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const Navigation()),
+    if (mounted) {
+      if (success) {
+        _nextPage();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(provider.error ?? 'Gagal menyimpan profil'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Gagal menyimpan: $e')));
+    }
+  }
+
+  // ── Slide 3 → Save preferences + complete onboarding ──
+  Future<void> _onSubmit() async {
+    final provider = context.read<OnboardingProvider>();
+
+    if (!provider.isSlide3Valid) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Pilih minimal satu masalah'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    final success = await provider.savePreferencesAndComplete();
+
+    if (mounted) {
+      if (success) {
+        // Refresh profile so AuthGate knows onboarding is done
+        await context.read<ProfileProvider>().fetchProfile();
+
+        if (mounted) {
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (_) => const Navigation()),
+            (route) => false,
+          );
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(provider.error ?? 'Gagal menyimpan data'),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final isLoading = context.watch<ProfileProvider>().isLoading;
-
     return Scaffold(
       backgroundColor: Colors.white,
-      body: PageView(
-        controller: _pageController,
-        physics: const NeverScrollableScrollPhysics(),
-        onPageChanged: (i) => setState(() => _currentPage = i),
-        children: [
-          _WelcomePage(onStart: _nextPage),
-          _NicknamePage(
-            controller: _nicknameController,
-            onBack: _prevPage,
-            onNext: () {
-              if (_nicknameController.text.trim().isEmpty) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Nama panggilan tidak boleh kosong'),
-                  ),
-                );
-                return;
-              }
-              _nextPage();
-            },
-          ),
-          _ProblemPage(
-            options: _problemOptions,
-            selected: _selectedProblem,
-            onSelect: (v) => setState(() => _selectedProblem = v),
-            onBack: _prevPage,
-            onSubmit: isLoading ? null : _submit,
-            isLoading: isLoading,
-          ),
-        ],
+      body: Consumer<OnboardingProvider>(
+        builder: (context, provider, _) {
+          return PageView(
+            controller: _pageController,
+            physics: const NeverScrollableScrollPhysics(),
+            onPageChanged: (i) => provider.setCurrentPage(i),
+            children: [
+              // ── Slide 1: Welcome ──
+              _WelcomePage(onStart: _nextPage),
+
+              // ── Slide 2: Profile info ──
+              _ProfilePage(
+                nicknameController: _nicknameController,
+                gender: provider.gender,
+                birthDate: provider.birthDate,
+                isSaving: provider.isSaving,
+                onNicknameChanged: (v) => provider.setNickname(v),
+                onGenderChanged: (v) => provider.setGender(v),
+                onBirthDateTap: () => _showDatePicker(provider),
+                onBack: _prevPage,
+                onNext: _onSlide2Next,
+              ),
+
+              // ── Slide 3: Problem preferences ──
+              _ProblemPage(
+                availablePreferences: provider.availablePreferences,
+                selectedIds: provider.selectedPreferenceIds,
+                isLoadingPrefs: provider.isLoading,
+                isSaving: provider.isSaving,
+                error: provider.error,
+                onToggle: (id) => provider.togglePreference(id),
+                onBack: _prevPage,
+                onSubmit: _onSubmit,
+                onRetry: () => provider.loadPreferences(),
+              ),
+            ],
+          );
+        },
       ),
     );
+  }
+
+  Future<void> _showDatePicker(OnboardingProvider provider) async {
+    final now = DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: provider.birthDate ?? DateTime(now.year - 20),
+      firstDate: DateTime(1950),
+      lastDate: now,
+      helpText: 'Pilih tanggal lahir',
+      cancelText: 'Batal',
+      confirmText: 'Pilih',
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: Color(0xFF3D8BFF),
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+    if (picked != null) {
+      provider.setBirthDate(picked);
+    }
   }
 }
 
@@ -142,7 +204,6 @@ class _WelcomePage extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 32),
         child: Column(
           children: [
-            // Top progress pill
             const _ProgressPill(filled: 1, total: 3),
             const Spacer(flex: 2),
 
@@ -193,14 +254,27 @@ class _WelcomePage extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────
-// Page 2 — Nickname
+// Page 2 — Profile (nickname + gender + birth_date)
 // ─────────────────────────────────────────
-class _NicknamePage extends StatelessWidget {
-  final TextEditingController controller;
+class _ProfilePage extends StatelessWidget {
+  final TextEditingController nicknameController;
+  final String? gender;
+  final DateTime? birthDate;
+  final bool isSaving;
+  final ValueChanged<String> onNicknameChanged;
+  final ValueChanged<String?> onGenderChanged;
+  final VoidCallback onBirthDateTap;
   final VoidCallback onBack;
   final VoidCallback onNext;
-  const _NicknamePage({
-    required this.controller,
+
+  const _ProfilePage({
+    required this.nicknameController,
+    required this.gender,
+    required this.birthDate,
+    required this.isSaving,
+    required this.onNicknameChanged,
+    required this.onGenderChanged,
+    required this.onBirthDateTap,
     required this.onBack,
     required this.onNext,
   });
@@ -215,10 +289,10 @@ class _NicknamePage extends StatelessWidget {
           children: [
             const _ProgressPill(filled: 2, total: 3),
             _BackButton(onTap: onBack),
-            const Spacer(flex: 2),
+            const Spacer(flex: 1),
 
             const Text(
-              'Aku boleh memanggil\nkamu siapa?',
+              'Ceritakan sedikit\ntentang dirimu 🌱',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 22,
@@ -228,19 +302,20 @@ class _NicknamePage extends StatelessWidget {
               ),
             ),
 
-            const SizedBox(height: 28),
+            const SizedBox(height: 8),
 
             _MascotImage(variant: _MascotVariant.peace),
 
-            const SizedBox(height: 36),
+            const SizedBox(height: 24),
 
-            // Input
+            // ── Nickname input ──
             TextField(
-              controller: controller,
+              controller: nicknameController,
+              onChanged: onNicknameChanged,
               textAlign: TextAlign.center,
               style: const TextStyle(fontSize: 15),
               decoration: InputDecoration(
-                hintText: 'nama panggilan',
+                hintText: 'Nama panggilan',
                 hintStyle: TextStyle(color: Colors.grey.shade400),
                 contentPadding: const EdgeInsets.symmetric(
                   horizontal: 20,
@@ -257,9 +332,93 @@ class _NicknamePage extends StatelessWidget {
               ),
             ),
 
-            const Spacer(flex: 3),
+            const SizedBox(height: 16),
 
-            _PrimaryButton(label: 'Mulai Perjalanan', onTap: onNext),
+            // ── Gender selector ──
+            Row(
+              children: [
+                Expanded(
+                  child: _GenderCard(
+                    label: 'Laki-laki',
+                    icon: Icons.male_rounded,
+                    isSelected: gender == 'male',
+                    onTap: () => onGenderChanged('male'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _GenderCard(
+                    label: 'Perempuan',
+                    icon: Icons.female_rounded,
+                    isSelected: gender == 'female',
+                    onTap: () => onGenderChanged('female'),
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 16),
+
+            // ── Birth date picker ──
+            GestureDetector(
+              onTap: onBirthDateTap,
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 16,
+                ),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: birthDate != null
+                        ? const Color(0xFF3D8BFF)
+                        : Colors.grey.shade300,
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.calendar_today_rounded,
+                      size: 18,
+                      color: birthDate != null
+                          ? const Color(0xFF3D8BFF)
+                          : Colors.grey.shade400,
+                    ),
+                    const SizedBox(width: 10),
+                    Text(
+                      birthDate != null
+                          ? DateFormat('dd MMMM yyyy').format(birthDate!)
+                          : 'Tanggal lahir',
+                      style: TextStyle(
+                        fontSize: 15,
+                        color: birthDate != null
+                            ? Colors.black87
+                            : Colors.grey.shade400,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            const Spacer(flex: 2),
+
+            _PrimaryButton(
+              label: isSaving ? '' : 'Lanjutkan',
+              onTap: isSaving ? null : onNext,
+              child: isSaving
+                  ? const SizedBox(
+                      width: 22,
+                      height: 22,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2.5,
+                      ),
+                    )
+                  : null,
+            ),
             const SizedBox(height: 32),
           ],
         ),
@@ -269,23 +428,29 @@ class _NicknamePage extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────
-// Page 3 — Problem Preference
+// Page 3 — Problem Preferences (multi-select)
 // ─────────────────────────────────────────
 class _ProblemPage extends StatelessWidget {
-  final List<String> options;
-  final String? selected;
-  final ValueChanged<String> onSelect;
+  final List availablePreferences;
+  final Set<int> selectedIds;
+  final bool isLoadingPrefs;
+  final bool isSaving;
+  final String? error;
+  final ValueChanged<int> onToggle;
   final VoidCallback onBack;
-  final VoidCallback? onSubmit;
-  final bool isLoading;
+  final VoidCallback onSubmit;
+  final VoidCallback onRetry;
 
   const _ProblemPage({
-    required this.options,
-    required this.selected,
-    required this.onSelect,
+    required this.availablePreferences,
+    required this.selectedIds,
+    required this.isLoadingPrefs,
+    required this.isSaving,
+    this.error,
+    required this.onToggle,
     required this.onBack,
     required this.onSubmit,
-    required this.isLoading,
+    required this.onRetry,
   });
 
   @override
@@ -308,6 +473,17 @@ class _ProblemPage extends StatelessWidget {
                 fontWeight: FontWeight.bold,
                 color: Colors.black87,
                 height: 1.4,
+              ),
+            ),
+
+            const SizedBox(height: 6),
+
+            Text(
+              'Pilih satu atau lebih',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 13,
+                color: Colors.grey.shade500,
               ),
             ),
 
@@ -336,26 +512,151 @@ class _ProblemPage extends StatelessWidget {
                       color: isSelected
                           ? AppColors.primary
                           : Colors.grey.shade300,
+            // ── Dynamic options ──
+            if (isLoadingPrefs)
+              const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(20),
+                  child: CircularProgressIndicator(),
+                ),
+              )
+            else if (error != null)
+              // ── Error state ──
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  children: [
+                    Icon(Icons.error_outline, color: Colors.red.shade300, size: 48),
+                    const SizedBox(height: 12),
+                    Text(
+                      error!,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: Colors.red.shade400, fontSize: 13),
                     ),
-                  ),
-                  child: Text(
-                    opt,
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w500,
-                      color: isSelected ? Colors.white : Colors.black87,
+                    const SizedBox(height: 16),
+                    GestureDetector(
+                      onTap: onRetry,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF3D8BFF),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Text(
+                          'Coba Lagi',
+                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                        ),
+                      ),
                     ),
+                  ],
+                ),
+              )
+            else if (availablePreferences.isEmpty)
+              // ── Empty state ──
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  children: [
+                    Icon(Icons.inbox_rounded, color: Colors.grey.shade400, size: 48),
+                    const SizedBox(height: 12),
+                    Text(
+                      'Belum ada data preferences.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: Colors.grey.shade500, fontSize: 14),
+                    ),
+                    const SizedBox(height: 16),
+                    GestureDetector(
+                      onTap: onRetry,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF3D8BFF),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Text(
+                          'Muat Ulang',
+                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              )
+            else
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Wrap(
+                    spacing: 10,
+                    runSpacing: 10,
+                    alignment: WrapAlignment.center,
+                    children: availablePreferences.map((pref) {
+                      final isSelected = selectedIds.contains(pref.id);
+                      return GestureDetector(
+                        onTap: () => onToggle(pref.id),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 14,
+                          ),
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? const Color(0xFF3D8BFF)
+                                : Colors.white,
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
+                              color: isSelected
+                                  ? const Color(0xFF3D8BFF)
+                                  : Colors.grey.shade300,
+                              width: 1.5,
+                            ),
+                            boxShadow: isSelected
+                                ? [
+                                    BoxShadow(
+                                      color: const Color(0xFF3D8BFF)
+                                          .withValues(alpha: 0.3),
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ]
+                                : null,
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (isSelected) ...[
+                                const Icon(
+                                  Icons.check_circle_rounded,
+                                  color: Colors.white,
+                                  size: 18,
+                                ),
+                                const SizedBox(width: 6),
+                              ],
+                              Text(
+                                pref.name,
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                  color: isSelected
+                                      ? Colors.white
+                                      : Colors.black87,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }).toList(),
                   ),
                 ),
-              );
-            }),
+              ),
 
-            const Spacer(flex: 1),
+            const SizedBox(height: 16),
 
             _PrimaryButton(
-              label: isLoading ? '' : 'Mulai Perjalanan',
-              onTap: onSubmit,
-              child: isLoading
+              label: isSaving ? '' : 'Mulai Perjalanan',
+              onTap: isSaving ? null : onSubmit,
+              child: isSaving
                   ? const SizedBox(
                       width: 22,
                       height: 22,
@@ -377,6 +678,59 @@ class _ProblemPage extends StatelessWidget {
 // ─────────────────────────────────────────
 // Shared Widgets
 // ─────────────────────────────────────────
+
+class _GenderCard extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _GenderCard({
+    required this.label,
+    required this.icon,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFF3D8BFF) : Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: isSelected
+                ? const Color(0xFF3D8BFF)
+                : Colors.grey.shade300,
+            width: 1.5,
+          ),
+        ),
+        child: Column(
+          children: [
+            Icon(
+              icon,
+              size: 28,
+              color: isSelected ? Colors.white : Colors.grey.shade500,
+            ),
+            const SizedBox(height: 6),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: isSelected ? Colors.white : Colors.black87,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
 class _ProgressPill extends StatelessWidget {
   final int filled;
@@ -505,15 +859,15 @@ class _MascotImage extends StatelessWidget {
     return Center(
       child: Image.asset(
         _assetPath,
-        height: 160,
-        errorBuilder: (_, __, ___) => Container(
-          width: 130,
-          height: 130,
+        height: 130,
+        errorBuilder: (_, _, _) => Container(
+          width: 100,
+          height: 100,
           decoration: BoxDecoration(
             color: AppColors.primaryLight,
             shape: BoxShape.circle,
           ),
-          child: Icon(_fallbackIcon, size: 60, color: AppColors.primary),
+          child: Icon(_fallbackIcon, size: 48, color: const Color(0xFF3D8BFF)),
         ),
       ),
     );
