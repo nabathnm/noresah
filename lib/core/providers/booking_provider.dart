@@ -8,6 +8,9 @@ class BookingProvider with ChangeNotifier {
   List<Booking> _bookings = [];
   List<Booking> get bookings => _bookings;
 
+  List<Booking> _psychologistBookings = [];
+  List<Booking> get psychologistBookings => _psychologistBookings;
+
   List<Psychologist> _psychologists = [];
   List<Psychologist> get psychologists => _psychologists;
 
@@ -152,6 +155,46 @@ class BookingProvider with ChangeNotifier {
     }
   }
 
+  /// Ambil daftar booking untuk psikolog (semua booking ke psikolog ini)
+  Future<void> fetchPsychologistBookings() async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      final user = _supabase.auth.currentUser;
+      if (user == null) return;
+
+      final response = await _supabase
+          .from('bookings')
+          .select()
+          .eq('psychologist_id', user.id)
+          .order('scheduled_at', ascending: false);
+
+      _psychologistBookings = (response as List)
+          .map((json) => Booking.fromJson(json))
+          .toList();
+    } catch (e) {
+      debugPrint('Error fetching psychologist bookings: $e');
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  /// Psikolog mengkonfirmasi booking
+  Future<bool> confirmBooking(String bookingId) async {
+    try {
+      await _supabase
+          .from('bookings')
+          .update({'status': 'confirmed'}).eq('id', bookingId);
+      await fetchPsychologistBookings();
+      return true;
+    } catch (e) {
+      debugPrint('Error confirming booking: $e');
+      return false;
+    }
+  }
+
   /// Batalkan booking
   Future<bool> cancelBooking(String bookingId) async {
     try {
@@ -159,12 +202,17 @@ class BookingProvider with ChangeNotifier {
           .from('bookings')
           .update({'status': 'cancelled'}).eq('id', bookingId);
       await fetchBookings();
+      await fetchPsychologistBookings();
       return true;
     } catch (e) {
       debugPrint('Error cancelling booking: $e');
       return false;
     }
   }
+
+  /// Hitung jumlah booking pending (untuk dashboard psikolog)
+  int get pendingBookingsCount =>
+      _psychologistBookings.where((b) => b.status == BookingStatus.pending).length;
 
   List<Psychologist> _getDummyPsychologists() {
     return [

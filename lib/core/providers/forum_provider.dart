@@ -62,7 +62,75 @@ class ForumProvider with ChangeNotifier {
     }
   }
 
-  /// Buat post baru secara anonim
+  /// Ambil jawaban untuk post tertentu
+  Future<List<ForumAnswer>> fetchAnswers(String postId) async {
+    try {
+      final response = await _supabase
+          .from('forum_answers')
+          .select()
+          .eq('post_id', postId)
+          .order('created_at', ascending: true);
+
+      return (response as List)
+          .map((json) => ForumAnswer.fromJson(json))
+          .toList();
+    } catch (e) {
+      debugPrint('Error fetching answers: $e');
+      return [];
+    }
+  }
+
+  /// Psikolog menjawab pertanyaan user
+  Future<bool> addAnswer({
+    required String postId,
+    required String content,
+    required String psychologistName,
+  }) async {
+    try {
+      final user = _supabase.auth.currentUser;
+      if (user == null) return false;
+
+      final answer = ForumAnswer(
+        postId: postId,
+        userId: user.id,
+        content: content,
+        psychologistName: psychologistName,
+        createdAt: DateTime.now(),
+      );
+
+      await _supabase.from('forum_answers').insert(answer.toJson());
+
+      // Update answer count
+      final idx = _posts.indexWhere((p) => p.id == postId);
+      if (idx != -1) {
+        final post = _posts[idx];
+        _posts[idx] = ForumPost(
+          id: post.id,
+          userId: post.userId,
+          content: post.content,
+          mood: post.mood,
+          category: post.category,
+          likes: post.likes,
+          answerCount: post.answerCount + 1,
+          createdAt: post.createdAt,
+        );
+
+        // Update count di database
+        await _supabase
+            .from('forum_posts')
+            .update({'answer_count': post.answerCount + 1})
+            .eq('id', postId);
+      }
+
+      notifyListeners();
+      return true;
+    } catch (e) {
+      debugPrint('Error adding answer: $e');
+      return false;
+    }
+  }
+
+  /// Buat post baru secara anonim (hanya user)
   Future<bool> createPost({
     required String content,
     String? mood,
@@ -116,7 +184,8 @@ class ForumProvider with ChangeNotifier {
       final newLikes = post.likes + 1;
       await _supabase
           .from('forum_posts')
-          .update({'likes': newLikes}).eq('id', postId);
+          .update({'likes': newLikes})
+          .eq('id', postId);
 
       _posts[idx] = ForumPost(
         id: post.id,
@@ -125,7 +194,7 @@ class ForumProvider with ChangeNotifier {
         mood: post.mood,
         category: post.category,
         likes: newLikes,
-        comments: post.comments,
+        answerCount: post.answerCount,
         createdAt: post.createdAt,
       );
       notifyListeners();
@@ -134,9 +203,29 @@ class ForumProvider with ChangeNotifier {
     }
   }
 
+  /// Ambil posts yang belum dijawab (untuk dashboard psikolog)
+  Future<List<ForumPost>> fetchUnansweredPosts() async {
+    try {
+      final response = await _supabase
+          .from('forum_posts')
+          .select()
+          .eq('answer_count', 0)
+          .order('created_at', ascending: false);
+
+      return (response as List)
+          .map((json) => ForumPost.fromJson(json))
+          .toList();
+    } catch (e) {
+      debugPrint('Error fetching unanswered posts: $e');
+      return _getDummyPosts().where((p) => p.answerCount == 0).toList();
+    }
+  }
+
   /// Deteksi sederhana PII (nama, email, nomor telepon)
   bool _containsPII(String text) {
-    final emailRegex = RegExp(r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}');
+    final emailRegex = RegExp(
+      r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}',
+    );
     final phoneRegex = RegExp(r'(\+62|62|0)\d{9,12}');
 
     return emailRegex.hasMatch(text) || phoneRegex.hasMatch(text);
@@ -152,7 +241,7 @@ class ForumProvider with ChangeNotifier {
         mood: '😔 Merasa Lelah',
         category: 'Stress',
         likes: 24,
-        comments: 8,
+        answerCount: 1,
         createdAt: DateTime.now().subtract(const Duration(minutes: 2)),
       ),
       ForumPost(
@@ -163,7 +252,7 @@ class ForumProvider with ChangeNotifier {
         mood: '🙂 Berusaha Lebih Baik',
         category: 'Motivation',
         likes: 41,
-        comments: 14,
+        answerCount: 0,
         createdAt: DateTime.now().subtract(const Duration(minutes: 12)),
       ),
       ForumPost(
@@ -174,7 +263,7 @@ class ForumProvider with ChangeNotifier {
         mood: '😄 Pencapaian Kecil',
         category: 'Sleep',
         likes: 63,
-        comments: 20,
+        answerCount: 2,
         createdAt: DateTime.now().subtract(const Duration(hours: 1)),
       ),
     ];

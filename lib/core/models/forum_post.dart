@@ -1,4 +1,5 @@
 /// Model untuk post di Anonymous Community Forum.
+/// Constraint: Hanya psikolog yang bisa menjawab pertanyaan.
 class ForumPost {
   final String? id;
   final String userId;
@@ -6,9 +7,9 @@ class ForumPost {
   final String? mood;
   final String category;
   final int likes;
-  final int comments;
+  final int answerCount;
   final DateTime createdAt;
-  final List<ForumComment> commentList;
+  final List<ForumAnswer> answers;
 
   ForumPost({
     this.id,
@@ -17,9 +18,9 @@ class ForumPost {
     this.mood,
     this.category = 'General',
     this.likes = 0,
-    this.comments = 0,
+    this.answerCount = 0,
     required this.createdAt,
-    this.commentList = const [],
+    this.answers = const [],
   });
 
   Map<String, dynamic> toJson() => {
@@ -28,7 +29,7 @@ class ForumPost {
         'mood': mood,
         'category': category,
         'likes': likes,
-        'comments': comments,
+        'answer_count': answerCount,
         'created_at': createdAt.toIso8601String(),
       };
 
@@ -40,7 +41,7 @@ class ForumPost {
       mood: json['mood'],
       category: json['category'] ?? 'General',
       likes: json['likes'] ?? 0,
-      comments: json['comments'] ?? 0,
+      answerCount: json['answer_count'] ?? json['comments'] ?? 0,
       createdAt: DateTime.tryParse(json['created_at'] ?? '') ?? DateTime.now(),
     );
   }
@@ -56,20 +57,22 @@ class ForumPost {
   }
 }
 
-class ForumComment {
+/// Jawaban dari psikolog untuk post di forum.
+/// Hanya role psikolog yang bisa membuat ForumAnswer.
+class ForumAnswer {
   final String? id;
   final String postId;
   final String userId;
   final String content;
-  final bool isExpert;
+  final String psychologistName;
   final DateTime createdAt;
 
-  ForumComment({
+  ForumAnswer({
     this.id,
     required this.postId,
     required this.userId,
     required this.content,
-    this.isExpert = false,
+    required this.psychologistName,
     required this.createdAt,
   });
 
@@ -77,18 +80,28 @@ class ForumComment {
         'post_id': postId,
         'user_id': userId,
         'content': content,
-        'is_expert': isExpert,
+        'psychologist_name': psychologistName,
         'created_at': createdAt.toIso8601String(),
       };
 
-  factory ForumComment.fromJson(Map<String, dynamic> json) {
-    return ForumComment(
+  factory ForumAnswer.fromJson(Map<String, dynamic> json) {
+    return ForumAnswer(
       id: json['id']?.toString(),
       postId: json['post_id'] ?? '',
       userId: json['user_id'] ?? '',
       content: json['content'] ?? '',
-      isExpert: json['is_expert'] ?? false,
+      psychologistName: json['psychologist_name'] ?? 'Psikolog',
       createdAt: DateTime.tryParse(json['created_at'] ?? '') ?? DateTime.now(),
     );
+  }
+
+  String get timeAgo {
+    final now = DateTime.now();
+    final diff = now.difference(createdAt);
+    if (diff.inMinutes < 1) return 'Baru saja';
+    if (diff.inMinutes < 60) return '${diff.inMinutes} menit lalu';
+    if (diff.inHours < 24) return '${diff.inHours} jam lalu';
+    if (diff.inDays < 7) return '${diff.inDays} hari lalu';
+    return '${(diff.inDays / 7).floor()} minggu lalu';
   }
 }

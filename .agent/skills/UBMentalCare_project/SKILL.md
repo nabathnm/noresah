@@ -4,7 +4,7 @@ description: >
   This skill serves as a guideline or reference for developing the UBMentalCare app to ensure that the resulting features remain consistent and well-organized
 ---
 
-# ResahAI Agent Skill Definition
+# UBMentalCore Agent Skill Definition
 
 ## Identity & Purpose
 

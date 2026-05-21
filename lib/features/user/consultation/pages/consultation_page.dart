@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/providers/booking_provider.dart';
 import '../../../../core/models/booking.dart';
+import '../../../../core/utils/constant/app_colors.dart';
 import 'booking_detail_page.dart';
 import 'my_bookings_page.dart';
 
@@ -28,31 +29,23 @@ class _ConsultationPageState extends State<ConsultationPage> {
     final psychologists = bookingProvider.filteredPsychologists;
 
     return Scaffold(
-      backgroundColor: const Color(0xffF5F7FB),
+      backgroundColor: AppColors.netralLight,
       appBar: AppBar(
-        backgroundColor: const Color(0xffF5F7FB),
+        backgroundColor: AppColors.netralLight,
         elevation: 0,
         title: const Text(
           'Konsultasi',
-          style: TextStyle(
-            color: Colors.black,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
         ),
         actions: [
           IconButton(
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (_) => const MyBookingsPage(),
-                ),
+                MaterialPageRoute(builder: (_) => const MyBookingsPage()),
               );
             },
-            icon: const Icon(
-              Icons.calendar_month_rounded,
-              color: Colors.black,
-            ),
+            icon: const Icon(Icons.calendar_month_rounded, color: Colors.black),
           ),
         ],
       ),
@@ -63,12 +56,7 @@ class _ConsultationPageState extends State<ConsultationPage> {
             margin: const EdgeInsets.all(16),
             padding: const EdgeInsets.all(22),
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [
-                  Color(0xff8E9EFF),
-                  Color(0xff91EAE4),
-                ],
-              ),
+              gradient: AppColors.heroGradient,
               borderRadius: BorderRadius.circular(24),
             ),
             child: Row(
@@ -76,11 +64,7 @@ class _ConsultationPageState extends State<ConsultationPage> {
                 const CircleAvatar(
                   radius: 28,
                   backgroundColor: Colors.white24,
-                  child: Icon(
-                    Icons.favorite,
-                    color: Colors.white,
-                    size: 30,
-                  ),
+                  child: Icon(Icons.favorite, color: Colors.white, size: 30),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
@@ -98,10 +82,7 @@ class _ConsultationPageState extends State<ConsultationPage> {
                       SizedBox(height: 6),
                       Text(
                         'Bicara dengan aman bersama psikolog dan konselor bersertifikat.',
-                        style: TextStyle(
-                          color: Colors.white,
-                          height: 1.4,
-                        ),
+                        style: TextStyle(color: Colors.white, height: 1.4),
                       ),
                     ],
                   ),
@@ -146,8 +127,9 @@ class _ConsultationPageState extends State<ConsultationPage> {
                   child: Container(
                     margin: const EdgeInsets.only(right: 12),
                     child: Chip(
-                      backgroundColor:
-                          isSelected ? const Color(0xFF3D8BFF) : Colors.white,
+                      backgroundColor: isSelected
+                          ? AppColors.primary
+                          : Colors.white,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14),
                       ),
@@ -155,8 +137,9 @@ class _ConsultationPageState extends State<ConsultationPage> {
                         cat,
                         style: TextStyle(
                           color: isSelected ? Colors.white : Colors.black87,
-                          fontWeight:
-                              isSelected ? FontWeight.bold : FontWeight.normal,
+                          fontWeight: isSelected
+                              ? FontWeight.bold
+                              : FontWeight.normal,
                         ),
                       ),
                     ),
@@ -173,46 +156,45 @@ class _ConsultationPageState extends State<ConsultationPage> {
             child: bookingProvider.isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : psychologists.isEmpty
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.search_off_rounded,
-                              size: 64,
-                              color: Colors.grey.shade300,
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              'Psikolog tidak ditemukan',
-                              style: TextStyle(
-                                color: Colors.grey.shade500,
-                                fontSize: 16,
-                              ),
-                            ),
-                          ],
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.search_off_rounded,
+                          size: 64,
+                          color: Colors.grey.shade300,
                         ),
-                      )
-                    : ListView.builder(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        itemCount: psychologists.length,
-                        itemBuilder: (context, index) {
-                          final doctor = psychologists[index];
-                          return _PsychologistCard(
-                            psychologist: doctor,
-                            onBook: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => BookingDetailPage(
-                                    psychologist: doctor,
-                                  ),
-                                ),
-                              );
-                            },
+                        const SizedBox(height: 16),
+                        Text(
+                          'Psikolog tidak ditemukan',
+                          style: TextStyle(
+                            color: Colors.grey.shade500,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                : ListView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    itemCount: psychologists.length,
+                    itemBuilder: (context, index) {
+                      final doctor = psychologists[index];
+                      return _PsychologistCard(
+                        psychologist: doctor,
+                        onBook: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  BookingDetailPage(psychologist: doctor),
+                            ),
                           );
                         },
-                      ),
+                      );
+                    },
+                  ),
           ),
         ],
       ),
@@ -224,10 +206,7 @@ class _PsychologistCard extends StatelessWidget {
   final Psychologist psychologist;
   final VoidCallback onBook;
 
-  const _PsychologistCard({
-    required this.psychologist,
-    required this.onBook,
-  });
+  const _PsychologistCard({required this.psychologist, required this.onBook});
 
   @override
   Widget build(BuildContext context) {
@@ -251,13 +230,13 @@ class _PsychologistCard extends StatelessWidget {
             children: [
               CircleAvatar(
                 radius: 32,
-                backgroundColor: const Color(0xffDDE7FF),
+                backgroundColor: AppColors.primaryLight,
                 child: Text(
                   psychologist.name.split(' ').last[0],
                   style: const TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF3D8BFF),
+                    color: AppColors.primary,
                   ),
                 ),
               ),
@@ -276,9 +255,7 @@ class _PsychologistCard extends StatelessWidget {
                     const SizedBox(height: 6),
                     Text(
                       psychologist.specialist,
-                      style: TextStyle(
-                        color: Colors.grey.shade700,
-                      ),
+                      style: TextStyle(color: Colors.grey.shade700),
                     ),
                     const SizedBox(height: 6),
                     Text(
@@ -307,27 +284,13 @@ class _PsychologistCard extends StatelessWidget {
                 ),
                 child: Row(
                   children: [
-                    const Icon(
-                      Icons.star,
-                      size: 18,
-                      color: Colors.orange,
-                    ),
+                    const Icon(Icons.star, size: 18, color: Colors.orange),
                     const SizedBox(width: 6),
                     Text(
                       psychologist.rating.toString(),
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                   ],
-                ),
-              ),
-              const Spacer(),
-              Text(
-                psychologist.price,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
                 ),
               ),
             ],
@@ -338,7 +301,7 @@ class _PsychologistCard extends StatelessWidget {
             child: ElevatedButton(
               onPressed: onBook,
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF3D8BFF),
+                backgroundColor: AppColors.primary,
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(18),

@@ -2,9 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/providers/profile_provider.dart';
 import '../../../../core/providers/classification_provider.dart';
+import '../../../../core/providers/mood_provider.dart';
+import '../../../../core/models/mood_entry.dart';
 import '../../../../core/models/distress_classification.dart';
+import '../../../../core/utils/constant/app_colors.dart';
 import '../../chat/pages/chat_page.dart';
 import '../../emergency/pages/emergency_page.dart';
+import '../../journal/pages/journal_list_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -14,8 +18,6 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  String? _selectedMood;
-
   @override
   void initState() {
     super.initState();
@@ -32,6 +34,9 @@ class _HomePageState extends State<HomePage> {
           context,
           listen: false,
         ).fetchHistory();
+      } catch (_) {}
+      try {
+        Provider.of<MoodProvider>(context, listen: false).fetchTodayMood();
       } catch (_) {}
     });
   }
@@ -55,14 +60,20 @@ class _HomePageState extends State<HomePage> {
       currentLevel = classProvider.currentLevel;
     } catch (_) {}
 
+    final moodProvider = context.watch<MoodProvider>();
+    final todayMood = moodProvider.todayMood;
+
     return Scaffold(
-      backgroundColor: const Color(0xffF5F7FB),
+      backgroundColor: AppColors.netralLight,
       appBar: AppBar(
-        backgroundColor: const Color(0xffF5F7FB),
+        backgroundColor: AppColors.netralLight,
         elevation: 0,
         title: const Text(
           'UBMentalCare',
-          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            color: AppColors.textHeading,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         actions: [
           IconButton(
@@ -72,7 +83,10 @@ class _HomePageState extends State<HomePage> {
                 MaterialPageRoute(builder: (_) => const EmergencyPage()),
               );
             },
-            icon: const Icon(Icons.emergency_rounded, color: Color(0xffFF6B6B)),
+            icon: const Icon(
+              Icons.emergency_rounded,
+              color: AppColors.redNormal,
+            ),
           ),
         ],
       ),
@@ -80,24 +94,91 @@ class _HomePageState extends State<HomePage> {
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
+            // Emergency Banner Auto-show when Kritis
+            if (currentLevel == DistressLevel.kritis) ...[
+              Container(
+                width: double.infinity,
+                margin: const EdgeInsets.only(bottom: 16),
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  gradient: AppColors.emergencyGradient,
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.redNormal.withOpacity(0.3),
+                      blurRadius: 15,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.warning_amber_rounded,
+                        color: Colors.white,
+                        size: 24,
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Kondisi Kritis Terdeteksi!',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            currentLevel?.description ?? '',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(
+                        Icons.arrow_forward_ios,
+                        color: Colors.white,
+                        size: 16,
+                      ),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const EmergencyPage(),
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ],
+
             // Greeting Card
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(24),
-                gradient: const LinearGradient(
-                  colors: [
-                    Color(0xff7F7FD5),
-                    Color(0xff86A8E7),
-                    Color(0xff91EAE4),
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
+                gradient: AppColors.heroGradient,
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xff7F7FD5).withOpacity(0.3),
+                    color: AppColors.primary.withOpacity(0.3),
                     blurRadius: 20,
                     offset: const Offset(0, 8),
                   ),
@@ -145,7 +226,7 @@ class _HomePageState extends State<HomePage> {
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(24),
                   border: Border.all(
-                    color: const Color(0xFF3D8BFF).withOpacity(0.2),
+                    color: AppColors.primary.withOpacity(0.15),
                   ),
                   boxShadow: [
                     BoxShadow(
@@ -161,9 +242,7 @@ class _HomePageState extends State<HomePage> {
                       width: 52,
                       height: 52,
                       decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFF3D8BFF), Color(0xFF7FBBFF)],
-                        ),
+                        gradient: AppColors.primaryGradient,
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: const Icon(
@@ -182,13 +261,14 @@ class _HomePageState extends State<HomePage> {
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
+                              color: AppColors.textHeading,
                             ),
                           ),
                           SizedBox(height: 4),
                           Text(
                             'Ceritakan perasaanmu, aku siap mendengarkan 🌱',
                             style: TextStyle(
-                              color: Colors.black54,
+                              color: AppColors.textSecondary,
                               fontSize: 13,
                             ),
                           ),
@@ -197,7 +277,7 @@ class _HomePageState extends State<HomePage> {
                     ),
                     const Icon(
                       Icons.arrow_forward_ios,
-                      color: Color(0xFF3D8BFF),
+                      color: AppColors.primary,
                       size: 16,
                     ),
                   ],
@@ -216,37 +296,36 @@ class _HomePageState extends State<HomePage> {
                 children: [
                   const Text(
                     'Pelacakan Mood',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textHeading,
+                    ),
                   ),
                   const SizedBox(height: 20),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      _MoodItem(
-                        emoji: '😄',
-                        label: 'Senang',
-                        isSelected: _selectedMood == 'Senang',
-                        onTap: () => setState(() => _selectedMood = 'Senang'),
-                      ),
-                      _MoodItem(
-                        emoji: '🙂',
-                        label: 'Tenang',
-                        isSelected: _selectedMood == 'Tenang',
-                        onTap: () => setState(() => _selectedMood = 'Tenang'),
-                      ),
-                      _MoodItem(
-                        emoji: '😐',
-                        label: 'Biasa',
-                        isSelected: _selectedMood == 'Biasa',
-                        onTap: () => setState(() => _selectedMood = 'Biasa'),
-                      ),
-                      _MoodItem(
-                        emoji: '😔',
-                        label: 'Sedih',
-                        isSelected: _selectedMood == 'Sedih',
-                        onTap: () => setState(() => _selectedMood = 'Sedih'),
-                      ),
-                    ],
+                    children: MoodType.values.map((type) {
+                      return _MoodItem(
+                        emoji: type.emoji,
+                        label: type.label,
+                        isSelected: todayMood?.mood == type,
+                        onTap: () async {
+                          await moodProvider.saveMood(type);
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  'Mood disimpan: ${type.label} ${type.emoji}',
+                                ),
+                                backgroundColor: AppColors.primary,
+                                duration: const Duration(seconds: 2),
+                              ),
+                            );
+                          }
+                        },
+                      );
+                    }).toList(),
                   ),
                 ],
               ),
@@ -283,6 +362,7 @@ class _HomePageState extends State<HomePage> {
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
+                            color: AppColors.textHeading,
                           ),
                         ),
                         const Spacer(),
@@ -314,8 +394,8 @@ class _HomePageState extends State<HomePage> {
                           const SizedBox(height: 6),
                           Text(
                             currentLevel.description,
-                            style: TextStyle(
-                              color: Colors.grey.shade700,
+                            style: const TextStyle(
+                              color: AppColors.textSecondary,
                               fontSize: 13,
                               height: 1.4,
                             ),
@@ -337,30 +417,38 @@ class _HomePageState extends State<HomePage> {
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               childAspectRatio: 1.1,
-              children: const [
-                _FeatureCard(
+              children: [
+                const _FeatureCard(
                   title: 'Latihan Napas',
                   subtitle: 'Teknik relaksasi',
                   icon: Icons.air,
-                  color: Color(0xff7F7FD5),
+                  color: AppColors.primary,
                 ),
-                _FeatureCard(
+                const _FeatureCard(
                   title: 'Meditasi',
                   subtitle: 'Ketenangan batin',
                   icon: Icons.self_improvement,
-                  color: Color(0xff2E7D5B),
+                  color: AppColors.greenNormal,
                 ),
                 _FeatureCard(
                   title: 'Jurnal Harian',
                   subtitle: 'Tulis perasaanmu',
                   icon: Icons.book_rounded,
-                  color: Color(0xffF2C94C),
+                  color: AppColors.yellowNormal,
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const JournalListPage(),
+                      ),
+                    );
+                  },
                 ),
-                _FeatureCard(
+                const _FeatureCard(
                   title: 'Tips Tidur',
                   subtitle: 'Kualitas istirahat',
                   icon: Icons.bedtime_rounded,
-                  color: Color(0xff8E9EFF),
+                  color: AppColors.secondary,
                 ),
               ],
             ),
@@ -380,12 +468,12 @@ class _HomePageState extends State<HomePage> {
                       Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFEEF4FF),
+                          color: AppColors.primaryLight,
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: const Icon(
                           Icons.psychology_rounded,
-                          color: Color(0xFF3D8BFF),
+                          color: AppColors.primary,
                           size: 20,
                         ),
                       ),
@@ -395,6 +483,7 @@ class _HomePageState extends State<HomePage> {
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
+                          color: AppColors.textHeading,
                         ),
                       ),
                     ],
@@ -406,67 +495,7 @@ class _HomePageState extends State<HomePage> {
                     style: TextStyle(
                       fontSize: 14,
                       height: 1.6,
-                      color: Colors.black87,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 20),
-
-            // Daily Journal
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(20),
-              decoration: _cardDecoration(),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Jurnal Harian',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    maxLines: 5,
-                    decoration: InputDecoration(
-                      hintText: 'Tuliskan perasaanmu hari ini...',
-                      hintStyle: TextStyle(color: Colors.grey.shade400),
-                      filled: true,
-                      fillColor: Colors.grey.shade50,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide.none,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Jurnal berhasil disimpan! 📝'),
-                            backgroundColor: Colors.green,
-                          ),
-                        );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF3D8BFF),
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                      ),
-                      child: const Text(
-                        'Simpan Jurnal',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                      color: AppColors.textPrimary,
                     ),
                   ),
                 ],
@@ -497,13 +526,13 @@ class _HomePageState extends State<HomePage> {
   Color _getLevelColor(DistressLevel level) {
     switch (level) {
       case DistressLevel.rendah:
-        return const Color(0xff4CAF50);
+        return AppColors.greenNormal;
       case DistressLevel.sedang:
-        return Colors.orange;
+        return AppColors.yellowNormal;
       case DistressLevel.tinggi:
-        return const Color(0xffFF6B6B);
+        return AppColors.redNormal;
       case DistressLevel.kritis:
-        return Colors.red;
+        return AppColors.redDark;
     }
   }
 }
@@ -532,7 +561,7 @@ class _MoodItem extends StatelessWidget {
             CircleAvatar(
               radius: 28,
               backgroundColor: isSelected
-                  ? const Color(0xFF3D8BFF).withOpacity(0.15)
+                  ? AppColors.primary.withOpacity(0.15)
                   : Colors.grey.shade100,
               child: Text(emoji, style: const TextStyle(fontSize: 28)),
             ),
@@ -541,7 +570,7 @@ class _MoodItem extends StatelessWidget {
               label,
               style: TextStyle(
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                color: isSelected ? const Color(0xFF3D8BFF) : Colors.black87,
+                color: isSelected ? AppColors.primary : AppColors.textSecondary,
               ),
             ),
           ],
@@ -556,51 +585,63 @@ class _FeatureCard extends StatelessWidget {
   final String subtitle;
   final IconData icon;
   final Color color;
+  final VoidCallback? onTap;
 
   const _FeatureCard({
     required this.title,
     required this.subtitle,
     required this.icon,
     required this.color,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
             ),
-            child: Icon(icon, size: 24, color: color),
-          ),
-          const Spacer(),
-          Text(
-            title,
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            subtitle,
-            style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
-          ),
-        ],
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, size: 24, color: color),
+            ),
+            const Spacer(),
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textHeading,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              subtitle,
+              style: const TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 12,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

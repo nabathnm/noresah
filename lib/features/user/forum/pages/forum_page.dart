@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/providers/forum_provider.dart';
 import '../../../../core/models/forum_post.dart';
+import '../../../../core/utils/constant/app_colors.dart';
+import 'forum_detail_page.dart';
 
 class ForumPage extends StatefulWidget {
   const ForumPage({super.key});
@@ -115,7 +117,7 @@ class _ForumPageState extends State<ForumPage> {
                               ),
                               decoration: BoxDecoration(
                                 color: isSelected
-                                    ? const Color(0xFF3D8BFF)
+                                    ? AppColors.primary
                                     : Colors.grey.shade100,
                                 borderRadius: BorderRadius.circular(20),
                               ),
@@ -164,7 +166,7 @@ class _ForumPageState extends State<ForumPage> {
                               ),
                               decoration: BoxDecoration(
                                 color: isSelected
-                                    ? const Color(0xFF3D8BFF)
+                                    ? AppColors.primary
                                     : Colors.grey.shade100,
                                 borderRadius: BorderRadius.circular(18),
                               ),
@@ -285,7 +287,7 @@ class _ForumPageState extends State<ForumPage> {
                           }
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF3D8BFF),
+                          backgroundColor: AppColors.primary,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16),
                           ),
@@ -316,10 +318,10 @@ class _ForumPageState extends State<ForumPage> {
     final posts = forumProvider.posts;
 
     return Scaffold(
-      backgroundColor: const Color(0xffF5F7FB),
+      backgroundColor: AppColors.netralLight,
 
       appBar: AppBar(
-        backgroundColor: const Color(0xffF5F7FB),
+        backgroundColor: AppColors.netralLight,
         elevation: 0,
         title: const Text(
           'Komunitas Anonim',
@@ -340,7 +342,7 @@ class _ForumPageState extends State<ForumPage> {
       ),
 
       floatingActionButton: FloatingActionButton(
-        backgroundColor: const Color(0xFF3D8BFF),
+        backgroundColor: AppColors.primary,
         onPressed: _showCreatePostDialog,
         child: const Icon(
           Icons.add,
@@ -355,12 +357,7 @@ class _ForumPageState extends State<ForumPage> {
             margin: const EdgeInsets.all(16),
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [
-                  Color(0xff8E9EFF),
-                  Color(0xff91EAE4),
-                ],
-              ),
+              gradient: AppColors.heroGradient,
               borderRadius: BorderRadius.circular(24),
             ),
             child: Row(
@@ -422,7 +419,7 @@ class _ForumPageState extends State<ForumPage> {
                     margin: const EdgeInsets.only(right: 12),
                     child: Chip(
                       backgroundColor:
-                          isSelected ? const Color(0xFF3D8BFF) : Colors.white,
+                          isSelected ? AppColors.primary : Colors.white,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14),
                       ),
@@ -500,7 +497,16 @@ class _ForumPostCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ForumDetailPage(post: post),
+          ),
+        );
+      },
+      child: Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
@@ -521,10 +527,10 @@ class _ForumPostCard extends StatelessWidget {
           Row(
             children: [
               const CircleAvatar(
-                backgroundColor: Color(0xffDDE7FF),
+                backgroundColor: AppColors.primaryLight,
                 child: Icon(
                   Icons.person_outline,
-                  color: Colors.black,
+                  color: AppColors.primary,
                 ),
               ),
 
@@ -589,13 +595,13 @@ class _ForumPostCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
-                color: const Color(0xFFEEF4FF),
+                color: AppColors.primaryLight,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
                 '#${post.category}',
                 style: const TextStyle(
-                  color: Color(0xFF3D8BFF),
+                  color: AppColors.primary,
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
                 ),
@@ -625,7 +631,7 @@ class _ForumPostCard extends StatelessWidget {
 
               _ActionButton(
                 icon: Icons.chat_bubble_outline,
-                label: '${post.comments}',
+                label: '${post.answerCount}',
               ),
 
               const Spacer(),
@@ -638,8 +644,9 @@ class _ForumPostCard extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
+    ),
+  );
+}
 }
 
 class _ActionButton extends StatelessWidget {

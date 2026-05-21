@@ -327,7 +327,7 @@ class _ProfilePage extends StatelessWidget {
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(14),
-                  borderSide: const BorderSide(color: Color(0xFF3D8BFF)),
+                  borderSide: BorderSide(color: AppColors.primary),
                 ),
               ),
             ),
@@ -493,6 +493,25 @@ class _ProblemPage extends StatelessWidget {
 
             const SizedBox(height: 24),
 
+            // Option list
+            ...options.map((opt) {
+              final isSelected = selected == opt;
+              return GestureDetector(
+                onTap: () => onSelect(opt),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  margin: const EdgeInsets.only(bottom: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 16,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isSelected ? AppColors.primary : Colors.white,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: isSelected
+                          ? AppColors.primary
+                          : Colors.grey.shade300,
             // ── Dynamic options ──
             if (isLoadingPrefs)
               const Center(
@@ -732,7 +751,7 @@ class _ProgressPill extends StatelessWidget {
             width: active ? 28 : 8,
             height: 6,
             decoration: BoxDecoration(
-              color: active ? const Color(0xFF3D8BFF) : Colors.grey.shade300,
+              color: active ? AppColors.primary : Colors.grey.shade300,
               borderRadius: BorderRadius.circular(99),
             ),
           );
@@ -757,7 +776,7 @@ class _BackButton extends StatelessWidget {
           height: 40,
           margin: const EdgeInsets.only(top: 8, bottom: 4),
           decoration: BoxDecoration(
-            color: const Color(0xFF3D8BFF),
+            color: AppColors.primary,
             borderRadius: BorderRadius.circular(12),
           ),
           child: const Icon(
@@ -785,7 +804,7 @@ class _PrimaryButton extends StatelessWidget {
         duration: const Duration(milliseconds: 150),
         height: 54,
         decoration: BoxDecoration(
-          color: onTap == null ? Colors.grey.shade300 : const Color(0xFF3D8BFF),
+          color: onTap == null ? Colors.grey.shade300 : AppColors.primary,
           borderRadius: BorderRadius.circular(16),
         ),
         alignment: Alignment.center,
@@ -845,7 +864,7 @@ class _MascotImage extends StatelessWidget {
           width: 100,
           height: 100,
           decoration: BoxDecoration(
-            color: const Color(0xFFEEF4FF),
+            color: AppColors.primaryLight,
             shape: BoxShape.circle,
           ),
           child: Icon(_fallbackIcon, size: 48, color: const Color(0xFF3D8BFF)),
