@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../register/pages/register_page.dart';
-import '../../../user/widgets/navigation.dart';
+import '../../../../core/utils/widgets/auth_gate.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -35,7 +35,7 @@ class _LoginPageState extends State<LoginPage> {
       if (mounted) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const Navigation()),
+          MaterialPageRoute(builder: (context) => const AuthGate()),
         );
       }
     } on AuthException catch (e) {
