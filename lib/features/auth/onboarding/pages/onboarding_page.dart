@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../providers/onboarding_provider.dart';
 import '../../../../core/providers/profile_provider.dart';
 import '../../../user/widgets/navigation.dart';
+import '../../../../core/utils/constant/app_colors.dart';
 
 
 class OnboardingPage extends StatefulWidget {
@@ -493,25 +494,6 @@ class _ProblemPage extends StatelessWidget {
 
             const SizedBox(height: 24),
 
-            // Option list
-            ...options.map((opt) {
-              final isSelected = selected == opt;
-              return GestureDetector(
-                onTap: () => onSelect(opt),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  margin: const EdgeInsets.only(bottom: 12),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 16,
-                  ),
-                  decoration: BoxDecoration(
-                    color: isSelected ? AppColors.primary : Colors.white,
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(
-                      color: isSelected
-                          ? AppColors.primary
-                          : Colors.grey.shade300,
             // ── Dynamic options ──
             if (isLoadingPrefs)
               const Center(

@@ -70,7 +70,7 @@ class BookingProvider with ChangeNotifier {
 
     try {
       final response = await _supabase
-          .from('psychologists')
+          .from('psychologist_profiles')
           .select()
           .eq('is_available', true);
 

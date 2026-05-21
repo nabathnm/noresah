@@ -37,7 +37,6 @@ class App extends StatelessWidget {
             primary: AppColors.primary,
             secondary: AppColors.secondary,
           ),
-          colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF3D8BFF)),
           fontFamily: 'Roboto',
           scaffoldBackgroundColor: AppColors.netralLight,
           appBarTheme: const AppBarTheme(
@@ -61,16 +60,6 @@ class App extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: 16),
             ),
           ),
-        ),
-        home: const LoginPage(),
-        home: const LoginPage(), // atau cek session auth di sini
-        ChangeNotifierProvider(create: (_) => OnboardingProvider()),
-      ],
-      child: MaterialApp(
-        debugShowCheckedModeBanner: false,
-        title: 'Noresah',
-        theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         ),
         home: const AuthGate(),
       ),
