@@ -6,6 +6,7 @@ import 'core/providers/forum_provider.dart';
 import 'core/providers/booking_provider.dart';
 import 'core/providers/mood_provider.dart';
 import 'core/providers/journal_provider.dart';
+import 'core/providers/chat_provider.dart';
 import 'core/utils/constant/app_colors.dart';
 import 'features/auth/login/pages/login_page.dart';
 
@@ -21,6 +22,7 @@ class App extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => BookingProvider()),
         ChangeNotifierProvider(create: (_) => MoodProvider()),
         ChangeNotifierProvider(create: (_) => JournalProvider()),
+        ChangeNotifierProvider(create: (_) => ChatProvider()),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,

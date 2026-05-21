@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:noresah/core/utils/constant/app_colors.dart';
 import 'package:noresah/core/models/distress_classification.dart';
 import 'package:noresah/core/providers/classification_provider.dart';
+import 'package:noresah/core/providers/chat_provider.dart';
 import '../../emergency/pages/emergency_page.dart';
 import '../service/chat_service.dart';
 import 'chat_history_page.dart';
@@ -16,53 +17,24 @@ class ChatPage extends StatefulWidget {
 }
 
 class _ChatPageState extends State<ChatPage> {
-  final ChatService _chatService = ChatService();
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
-
-  bool _isLoading = false;
-  bool _showEmergencyBanner = false;
-
-  final List<Map<String, dynamic>> _messages = [
-    {
-      'isMe': false,
-      'message':
-          'Halo, aku **UBMentalCareAI** 👋\n\nSenang kamu ada di sini. Aku akan menemanimu. Bagaimana kabarmu hari ini?',
-    },
-  ];
 
   @override
   void initState() {
     super.initState();
-
-    // Setup classification callback
-    _chatService.onClassificationDetected = (level) {
-      try {
-        final provider = Provider.of<ClassificationProvider>(
-          context,
-          listen: false,
-        );
-        provider.updateLevel(level);
-        provider.saveClassification(
-          level: level,
-          summary: 'Klasifikasi dari percakapan chat',
-        );
-      } catch (_) {}
-
-      // Jika kritis, tampilkan banner darurat
-      if (level == DistressLevel.kritis) {
-        setState(() => _showEmergencyBanner = true);
-      }
-    };
-
-    // Setup emergency callback
-    _chatService.onEmergencyDetected = () {
-      setState(() => _showEmergencyBanner = true);
-    };
+    // Add scroll listener to ChatProvider so it automatically scrolls on updates
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<ChatProvider>(context, listen: false).addListener(_scrollToBottom);
+      _scrollToBottom(); // scroll to bottom on entry if there is existing history
+    });
   }
 
   @override
   void dispose() {
+    try {
+      Provider.of<ChatProvider>(context, listen: false).removeListener(_scrollToBottom);
+    } catch (_) {}
     _messageController.dispose();
     _scrollController.dispose();
     super.dispose();
@@ -84,30 +56,11 @@ class _ChatPageState extends State<ChatPage> {
     final message = _messageController.text.trim();
     if (message.isEmpty) return;
 
-    setState(() {
-      _messages.add({'isMe': true, 'message': message});
-      _isLoading = true;
-    });
+    final chatProvider = Provider.of<ChatProvider>(context, listen: false);
+    final classificationProvider = Provider.of<ClassificationProvider>(context, listen: false);
 
     _messageController.clear();
-    _scrollToBottom();
-
-    final response = await _chatService.sendMessage(message);
-
-    setState(() {
-      _isLoading = false;
-      if (response != null) {
-        _messages.add({'isMe': false, 'message': response});
-      } else {
-        _messages.add({
-          'isMe': false,
-          'message':
-              'Maaf, saya tidak dapat memproses permintaan kamu saat ini. Silakan coba lagi.',
-        });
-      }
-    });
-
-    _scrollToBottom();
+    await chatProvider.sendMessage(message, classificationProvider);
   }
 
   void _navigateToEmergency() {
@@ -119,6 +72,11 @@ class _ChatPageState extends State<ChatPage> {
 
   @override
   Widget build(BuildContext context) {
+    final chatProvider = context.watch<ChatProvider>();
+    final messages = chatProvider.messages;
+    final isLoading = chatProvider.isLoading;
+    final showEmergencyBanner = chatProvider.showEmergencyBanner;
+
     return Scaffold(
       backgroundColor: AppColors.primary,
       body: SafeArea(
@@ -173,7 +131,7 @@ class _ChatPageState extends State<ChatPage> {
                 child: Column(
                   children: [
                     // Emergency Banner
-                    if (_showEmergencyBanner)
+                    if (showEmergencyBanner)
                       GestureDetector(
                         onTap: _navigateToEmergency,
                         child: Container(
@@ -215,9 +173,7 @@ class _ChatPageState extends State<ChatPage> {
                                 ),
                               ),
                               GestureDetector(
-                                onTap: () => setState(
-                                  () => _showEmergencyBanner = false,
-                                ),
+                                onTap: () => chatProvider.hideEmergencyBanner(),
                                 child: const Icon(
                                   Icons.close,
                                   color: Colors.white70,
@@ -234,15 +190,15 @@ class _ChatPageState extends State<ChatPage> {
                       child: ListView.builder(
                         controller: _scrollController,
                         padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
-                        itemCount: _messages.length + (_isLoading ? 1 : 0),
+                        itemCount: messages.length + (isLoading ? 1 : 0),
                         itemBuilder: (context, index) {
-                          if (_isLoading && index == _messages.length) {
+                          if (isLoading && index == messages.length) {
                             return const Align(
                               alignment: Alignment.centerLeft,
                               child: _TypingIndicator(),
                             );
                           }
-                          final message = _messages[index];
+                          final message = messages[index];
                           final bool isMe = message['isMe'];
                           return _ChatBubble(
                             message: message['message'],
@@ -344,7 +300,7 @@ class _ChatPageState extends State<ChatPage> {
                             ),
                             const SizedBox(width: 10),
                             GestureDetector(
-                              onTap: _isLoading ? null : _sendMessage,
+                              onTap: isLoading ? null : _sendMessage,
                               child: Container(
                                   width: 50,
                                   height: 50,

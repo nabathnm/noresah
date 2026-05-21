@@ -65,10 +65,7 @@ class EmergencyPage extends StatelessWidget {
         ),
         title: const Text(
           'Bantuan Darurat',
-          style: TextStyle(
-            color: Colors.black,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
         ),
       ),
       body: SingleChildScrollView(
@@ -172,7 +169,7 @@ class EmergencyPage extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Telepon Sekarang',
+                            'Telepon LKM UB',
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
@@ -181,7 +178,7 @@ class EmergencyPage extends StatelessWidget {
                           ),
                           SizedBox(height: 4),
                           Text(
-                            '119 ext 8 - Hotline Kesehatan Jiwa',
+                            '999 - Unit Kesehatan Jiwa UB',
                             style: TextStyle(
                               color: Colors.black54,
                               fontSize: 13,
@@ -207,10 +204,7 @@ class EmergencyPage extends StatelessWidget {
               alignment: Alignment.centerLeft,
               child: Text(
                 'Layanan Bantuan Lainnya',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
             ),
 
@@ -318,10 +312,7 @@ class EmergencyPage extends StatelessWidget {
                 children: [
                   Text(
                     '💡 Tips Keamanan',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                   SizedBox(height: 12),
                   Text(

@@ -33,9 +33,7 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: AppColors.primary,
-            ),
+            colorScheme: const ColorScheme.light(primary: AppColors.primary),
           ),
           child: child!,
         );
@@ -53,9 +51,7 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: AppColors.primary,
-            ),
+            colorScheme: const ColorScheme.light(primary: AppColors.primary),
           ),
           child: child!,
         );
@@ -129,10 +125,7 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
                 const SizedBox(height: 24),
                 const Text(
                   'Booking Berhasil! 🎉',
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 12),
                 Text(
@@ -192,10 +185,7 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
         ),
         title: const Text(
           'Detail Booking',
-          style: TextStyle(
-            color: Colors.black,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
         ),
       ),
       body: SingleChildScrollView(
@@ -243,18 +233,12 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
                   const SizedBox(height: 6),
                   Text(
                     doctor.specialist,
-                    style: TextStyle(
-                      color: Colors.grey.shade600,
-                      fontSize: 15,
-                    ),
+                    style: TextStyle(color: Colors.grey.shade600, fontSize: 15),
                   ),
                   const SizedBox(height: 6),
                   Text(
                     doctor.experience,
-                    style: TextStyle(
-                      color: Colors.grey.shade500,
-                      fontSize: 13,
-                    ),
+                    style: TextStyle(color: Colors.grey.shade500, fontSize: 13),
                   ),
                   const SizedBox(height: 16),
                   Row(
@@ -271,8 +255,11 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.star,
-                                size: 16, color: Colors.orange),
+                            const Icon(
+                              Icons.star,
+                              size: 16,
+                              color: Colors.orange,
+                            ),
                             const SizedBox(width: 4),
                             Text(
                               doctor.rating.toString(),
@@ -282,15 +269,6 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
                               ),
                             ),
                           ],
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Text(
-                        doctor.price,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                          color: AppColors.primary,
                         ),
                       ),
                     ],
@@ -304,10 +282,7 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
             // Date Picker
             const Text(
               'Pilih Tanggal',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
             GestureDetector(
@@ -354,10 +329,7 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
             // Time Picker
             const Text(
               'Pilih Waktu',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
             GestureDetector(
@@ -404,10 +376,7 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
             // Notes
             const Text(
               'Catatan (Opsional)',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
             TextField(

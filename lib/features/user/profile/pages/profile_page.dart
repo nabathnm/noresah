@@ -97,59 +97,6 @@ class _ProfilePageState extends State<ProfilePage> {
 
                   const SizedBox(height: 20),
 
-                  // Mental Health Summary
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(20),
-                    decoration: _cardDecoration(),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Mental Health Summary',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-
-                        const SizedBox(height: 20),
-
-                        const HealthInfoTile(
-                          icon: Icons.favorite,
-                          title: 'Current Mood',
-                          subtitle: 'Calm & Stable',
-                        ),
-
-                        const SizedBox(height: 16),
-
-                        const HealthInfoTile(
-                          icon: Icons.bedtime,
-                          title: 'Sleep Quality',
-                          subtitle: '7h 42m average',
-                        ),
-
-                        const SizedBox(height: 16),
-
-                        const HealthInfoTile(
-                          icon: Icons.phone_android,
-                          title: 'Average Screen Time',
-                          subtitle: '5h 12m daily',
-                        ),
-
-                        const SizedBox(height: 16),
-
-                        const HealthInfoTile(
-                          icon: Icons.directions_walk,
-                          title: 'Daily Activity',
-                          subtitle: '6,421 steps/day',
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 20),
-
                   // Logout Button
                   SizedBox(
                     width: double.infinity,
