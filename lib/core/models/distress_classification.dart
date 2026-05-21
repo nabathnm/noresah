@@ -1,20 +1,15 @@
 /// Model untuk level klasifikasi distress/kecemasan user.
-enum DistressLevel {
-  rendah,
-  sedang,
-  tinggi,
-  kritis,
-}
+enum DistressLevel { rendah, sedang, tinggi, kritis }
 
 extension DistressLevelExtension on DistressLevel {
   String get label {
     switch (this) {
       case DistressLevel.rendah:
-        return 'Rendah';
+        return 'Aman';
       case DistressLevel.sedang:
-        return 'Sedang';
+        return 'Waspada';
       case DistressLevel.tinggi:
-        return 'Tinggi';
+        return 'Khawatir';
       case DistressLevel.kritis:
         return 'Kritis';
     }
@@ -61,13 +56,13 @@ extension DistressLevelExtension on DistressLevel {
 
   static DistressLevel fromString(String value) {
     switch (value.toLowerCase()) {
-      case 'rendah':
+      case 'aman':
       case 'low':
         return DistressLevel.rendah;
-      case 'sedang':
+      case 'waspada':
       case 'medium':
         return DistressLevel.sedang;
-      case 'tinggi':
+      case 'khawatir':
       case 'high':
         return DistressLevel.tinggi;
       case 'kritis':
@@ -95,13 +90,13 @@ class DistressClassification {
   });
 
   Map<String, dynamic> toJson() => {
-        'user_id': userId,
-        'level': level.numericValue,
-        'level_label': level.label,
-        'summary': summary,
-        'keywords': keywords,
-        'created_at': timestamp.toIso8601String(),
-      };
+    'user_id': userId,
+    'level': level.numericValue,
+    'level_label': level.label,
+    'summary': summary,
+    'keywords': keywords,
+    'created_at': timestamp.toIso8601String(),
+  };
 
   factory DistressClassification.fromJson(Map<String, dynamic> json) {
     final levelValue = json['level'] as int? ?? 1;

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/providers/booking_provider.dart';
 import '../../../../core/models/booking.dart';
+import '../../../../core/utils/constant/app_colors.dart';
 
 class MyBookingsPage extends StatefulWidget {
   const MyBookingsPage({super.key});
@@ -25,9 +26,9 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
     final bookings = bookingProvider.bookings;
 
     return Scaffold(
-      backgroundColor: const Color(0xffF5F7FB),
+      backgroundColor: AppColors.netralLight,
       appBar: AppBar(
-        backgroundColor: const Color(0xffF5F7FB),
+        backgroundColor: AppColors.netralLight,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios, color: Colors.black),
@@ -92,9 +93,9 @@ class _BookingCard extends StatelessWidget {
       case BookingStatus.pending:
         return Colors.orange;
       case BookingStatus.confirmed:
-        return const Color(0xFF3D8BFF);
+        return AppColors.primary;
       case BookingStatus.completed:
-        return const Color(0xff4CAF50);
+        return AppColors.greenNormal;
       case BookingStatus.cancelled:
         return Colors.red;
     }
@@ -137,13 +138,13 @@ class _BookingCard extends StatelessWidget {
             children: [
               CircleAvatar(
                 radius: 24,
-                backgroundColor: const Color(0xffDDE7FF),
+                backgroundColor: AppColors.primaryLight,
                 child: Text(
                   booking.psychologistName.split(' ').last[0],
                   style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF3D8BFF),
+                    color: AppColors.primary,
                   ),
                 ),
               ),
@@ -303,18 +304,18 @@ class _InfoChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: const Color(0xFFEEF4FF),
+        color: AppColors.primaryLight,
         borderRadius: BorderRadius.circular(10),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 16, color: const Color(0xFF3D8BFF)),
+          Icon(icon, size: 16, color: AppColors.primary),
           const SizedBox(width: 6),
           Text(
             label,
             style: const TextStyle(
-              color: Color(0xFF3D8BFF),
+              color: AppColors.primary,
               fontSize: 13,
               fontWeight: FontWeight.w600,
             ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:noresah/core/utils/constant/app_colors.dart';
 
 /// Halaman darurat dengan daftar kontak bantuan kesehatan jiwa.
 class EmergencyPage extends StatelessWidget {
@@ -54,9 +55,9 @@ class EmergencyPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xffF5F7FB),
+      backgroundColor: AppColors.netralLight,
       appBar: AppBar(
-        backgroundColor: const Color(0xffF5F7FB),
+        backgroundColor: AppColors.netralLight,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios, color: Colors.black),
@@ -64,10 +65,7 @@ class EmergencyPage extends StatelessWidget {
         ),
         title: const Text(
           'Bantuan Darurat',
-          style: TextStyle(
-            color: Colors.black,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
         ),
       ),
       body: SingleChildScrollView(
@@ -79,15 +77,11 @@ class EmergencyPage extends StatelessWidget {
               width: double.infinity,
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xffFF6B6B), Color(0xffFF8E8E)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
+                gradient: AppColors.emergencyGradient,
                 borderRadius: BorderRadius.circular(24),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xffFF6B6B).withOpacity(0.3),
+                    color: AppColors.redNormal.withOpacity(0.3),
                     blurRadius: 20,
                     offset: const Offset(0, 8),
                   ),
@@ -143,7 +137,7 @@ class EmergencyPage extends StatelessWidget {
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                    color: const Color(0xffFF6B6B).withOpacity(0.3),
+                    color: AppColors.redNormal.withOpacity(0.3),
                     width: 2,
                   ),
                   boxShadow: [
@@ -160,7 +154,7 @@ class EmergencyPage extends StatelessWidget {
                       width: 56,
                       height: 56,
                       decoration: BoxDecoration(
-                        color: const Color(0xffFF6B6B),
+                        color: AppColors.redNormal,
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: const Icon(
@@ -175,16 +169,16 @@ class EmergencyPage extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Telepon Sekarang',
+                            'Telepon LKM UB',
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
-                              color: Color(0xffFF6B6B),
+                              color: AppColors.redNormal,
                             ),
                           ),
                           SizedBox(height: 4),
                           Text(
-                            '119 ext 8 - Hotline Kesehatan Jiwa',
+                            '999 - Unit Kesehatan Jiwa UB',
                             style: TextStyle(
                               color: Colors.black54,
                               fontSize: 13,
@@ -195,7 +189,7 @@ class EmergencyPage extends StatelessWidget {
                     ),
                     const Icon(
                       Icons.arrow_forward_ios,
-                      color: Color(0xffFF6B6B),
+                      color: AppColors.redNormal,
                       size: 18,
                     ),
                   ],
@@ -210,10 +204,7 @@ class EmergencyPage extends StatelessWidget {
               alignment: Alignment.centerLeft,
               child: Text(
                 'Layanan Bantuan Lainnya',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
             ),
 
@@ -244,7 +235,7 @@ class EmergencyPage extends StatelessWidget {
                     width: 48,
                     height: 48,
                     decoration: BoxDecoration(
-                      color: const Color(0xffEEF4FF),
+                      color: AppColors.primaryLight,
                       borderRadius: BorderRadius.circular(14),
                     ),
                     child: Center(
@@ -268,7 +259,7 @@ class EmergencyPage extends StatelessWidget {
                       Text(
                         '${contact['number']} ${contact['ext']}',
                         style: const TextStyle(
-                          color: Color(0xFF3D8BFF),
+                          color: AppColors.primary,
                           fontWeight: FontWeight.w600,
                           fontSize: 14,
                         ),
@@ -289,7 +280,7 @@ class EmergencyPage extends StatelessWidget {
                       width: 42,
                       height: 42,
                       decoration: BoxDecoration(
-                        color: const Color(0xff4CAF50),
+                        color: AppColors.greenNormal,
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: const Icon(
@@ -310,10 +301,10 @@ class EmergencyPage extends StatelessWidget {
               width: double.infinity,
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: const Color(0xffFFF9E6),
+                color: AppColors.yellowLight,
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
-                  color: const Color(0xffF2C94C).withOpacity(0.3),
+                  color: AppColors.yellowNormal.withOpacity(0.3),
                 ),
               ),
               child: const Column(
@@ -321,10 +312,7 @@ class EmergencyPage extends StatelessWidget {
                 children: [
                   Text(
                     '💡 Tips Keamanan',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                   SizedBox(height: 12),
                   Text(

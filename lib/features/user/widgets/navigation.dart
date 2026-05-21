@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:noresah/core/utils/constant/app_colors.dart';
 import '../home/pages/home_page.dart';
 import '../forum/pages/forum_page.dart';
 import '../chat/pages/chat_page.dart';
@@ -41,7 +42,7 @@ class _NavigationState extends State<Navigation> {
 
   Widget _buildBottomNavBar() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 0),
       child: Container(
         height: 78,
         decoration: BoxDecoration(
@@ -85,7 +86,7 @@ class _NavigationState extends State<Navigation> {
           icon,
           width: 32,
           height: 32,
-          color: isSelected ? const Color(0xFF3D8BFF) : Colors.grey,
+          color: isSelected ? AppColors.primary : Colors.grey,
         ),
       ),
     );
@@ -105,13 +106,13 @@ class _NavigationState extends State<Navigation> {
           width: 68,
           height: 68,
           decoration: BoxDecoration(
-            color: Color(0xFF3D8BFF),
+            color: AppColors.primary,
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withOpacity(0.3),
                 blurRadius: 12,
-                offset: Offset(0, 6),
+                offset: const Offset(0, 6),
               ),
             ],
           ),

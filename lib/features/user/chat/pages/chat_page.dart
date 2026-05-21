@@ -4,8 +4,10 @@ import 'package:provider/provider.dart';
 import 'package:noresah/core/utils/constant/app_colors.dart';
 import 'package:noresah/core/models/distress_classification.dart';
 import 'package:noresah/core/providers/classification_provider.dart';
+import 'package:noresah/core/providers/chat_provider.dart';
 import '../../emergency/pages/emergency_page.dart';
 import '../service/chat_service.dart';
+import 'chat_history_page.dart';
 
 class ChatPage extends StatefulWidget {
   const ChatPage({super.key});
@@ -15,53 +17,24 @@ class ChatPage extends StatefulWidget {
 }
 
 class _ChatPageState extends State<ChatPage> {
-  final ChatService _chatService = ChatService();
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
-
-  bool _isLoading = false;
-  bool _showEmergencyBanner = false;
-
-  final List<Map<String, dynamic>> _messages = [
-    {
-      'isMe': false,
-      'message':
-          'Halo, aku **UBMentalCareAI** 👋\n\nSenang kamu ada di sini. Aku akan menemanimu. Bagaimana kabarmu hari ini?',
-    },
-  ];
 
   @override
   void initState() {
     super.initState();
-
-    // Setup classification callback
-    _chatService.onClassificationDetected = (level) {
-      try {
-        final provider = Provider.of<ClassificationProvider>(
-          context,
-          listen: false,
-        );
-        provider.updateLevel(level);
-        provider.saveClassification(
-          level: level,
-          summary: 'Klasifikasi dari percakapan chat',
-        );
-      } catch (_) {}
-
-      // Jika kritis, tampilkan banner darurat
-      if (level == DistressLevel.kritis) {
-        setState(() => _showEmergencyBanner = true);
-      }
-    };
-
-    // Setup emergency callback
-    _chatService.onEmergencyDetected = () {
-      setState(() => _showEmergencyBanner = true);
-    };
+    // Add scroll listener to ChatProvider so it automatically scrolls on updates
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<ChatProvider>(context, listen: false).addListener(_scrollToBottom);
+      _scrollToBottom(); // scroll to bottom on entry if there is existing history
+    });
   }
 
   @override
   void dispose() {
+    try {
+      Provider.of<ChatProvider>(context, listen: false).removeListener(_scrollToBottom);
+    } catch (_) {}
     _messageController.dispose();
     _scrollController.dispose();
     super.dispose();
@@ -83,30 +56,11 @@ class _ChatPageState extends State<ChatPage> {
     final message = _messageController.text.trim();
     if (message.isEmpty) return;
 
-    setState(() {
-      _messages.add({'isMe': true, 'message': message});
-      _isLoading = true;
-    });
+    final chatProvider = Provider.of<ChatProvider>(context, listen: false);
+    final classificationProvider = Provider.of<ClassificationProvider>(context, listen: false);
 
     _messageController.clear();
-    _scrollToBottom();
-
-    final response = await _chatService.sendMessage(message);
-
-    setState(() {
-      _isLoading = false;
-      if (response != null) {
-        _messages.add({'isMe': false, 'message': response});
-      } else {
-        _messages.add({
-          'isMe': false,
-          'message':
-              'Maaf, saya tidak dapat memproses permintaan kamu saat ini. Silakan coba lagi.',
-        });
-      }
-    });
-
-    _scrollToBottom();
+    await chatProvider.sendMessage(message, classificationProvider);
   }
 
   void _navigateToEmergency() {
@@ -118,8 +72,13 @@ class _ChatPageState extends State<ChatPage> {
 
   @override
   Widget build(BuildContext context) {
+    final chatProvider = context.watch<ChatProvider>();
+    final messages = chatProvider.messages;
+    final isLoading = chatProvider.isLoading;
+    final showEmergencyBanner = chatProvider.showEmergencyBanner;
+
     return Scaffold(
-      backgroundColor: AppColors.primaryNormalActive,
+      backgroundColor: AppColors.primary,
       body: SafeArea(
         bottom: false,
         child: Column(
@@ -145,6 +104,16 @@ class _ChatPageState extends State<ChatPage> {
                     ),
                   ),
                   _HeaderIconButton(
+                    icon: Icons.history_rounded,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const ChatHistoryPage()),
+                      );
+                    },
+                  ),
+                  const SizedBox(width: 8),
+                  _HeaderIconButton(
                     icon: Icons.emergency_rounded,
                     onTap: _navigateToEmergency,
                   ),
@@ -162,7 +131,7 @@ class _ChatPageState extends State<ChatPage> {
                 child: Column(
                   children: [
                     // Emergency Banner
-                    if (_showEmergencyBanner)
+                    if (showEmergencyBanner)
                       GestureDetector(
                         onTap: _navigateToEmergency,
                         child: Container(
@@ -170,9 +139,7 @@ class _ChatPageState extends State<ChatPage> {
                           margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
                           padding: const EdgeInsets.all(14),
                           decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [Color(0xffFF6B6B), Color(0xffFF8E8E)],
-                            ),
+                            gradient: AppColors.emergencyGradient,
                             borderRadius: BorderRadius.circular(16),
                           ),
                           child: Row(
@@ -206,9 +173,7 @@ class _ChatPageState extends State<ChatPage> {
                                 ),
                               ),
                               GestureDetector(
-                                onTap: () => setState(
-                                  () => _showEmergencyBanner = false,
-                                ),
+                                onTap: () => chatProvider.hideEmergencyBanner(),
                                 child: const Icon(
                                   Icons.close,
                                   color: Colors.white70,
@@ -225,15 +190,15 @@ class _ChatPageState extends State<ChatPage> {
                       child: ListView.builder(
                         controller: _scrollController,
                         padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
-                        itemCount: _messages.length + (_isLoading ? 1 : 0),
+                        itemCount: messages.length + (isLoading ? 1 : 0),
                         itemBuilder: (context, index) {
-                          if (_isLoading && index == _messages.length) {
+                          if (isLoading && index == messages.length) {
                             return const Align(
                               alignment: Alignment.centerLeft,
                               child: _TypingIndicator(),
                             );
                           }
-                          final message = _messages[index];
+                          final message = messages[index];
                           final bool isMe = message['isMe'];
                           return _ChatBubble(
                             message: message['message'],
@@ -335,89 +300,172 @@ class _ChatPageState extends State<ChatPage> {
                             ),
                             const SizedBox(width: 10),
                             GestureDetector(
-                              onTap: _isLoading ? null : _sendMessage,
+                              onTap: isLoading ? null : _sendMessage,
                               child: Container(
-                                width: 50,
-                                height: 50,
-                                decoration: BoxDecoration(
-                                  color: AppColors.primaryNormalActive,
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                                child: const Icon(
-                                  Icons.send_rounded,
-                                  color: Colors.white,
-                                  size: 22,
+                                  width: 50,
+                                  height: 50,
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primary,
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  child: const Icon(
+                                    Icons.send_rounded,
+                                    color: Colors.white,
+                                    size: 22,
+                                  ),
                                 ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+  }
+
+  // ── Sub-widgets ──────────────────────────────────────────────
+
+  class _HeaderIconButton extends StatelessWidget {
+    final IconData icon;
+    final VoidCallback onTap;
+
+    const _HeaderIconButton({required this.icon, required this.onTap});
+
+    @override
+    Widget build(BuildContext context) {
+      return GestureDetector(
+        onTap: onTap,
+        child: Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.25),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(icon, color: Colors.white, size: 24),
+        ),
+      );
+    }
+  }
+
+  class _ChatBubble extends StatelessWidget {
+    final String message;
+    final bool isMe;
+
+    const _ChatBubble({required this.message, required this.isMe});
+
+    @override
+    Widget build(BuildContext context) {
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 14),
+        child: Row(
+          mainAxisAlignment: isMe
+              ? MainAxisAlignment.end
+              : MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (!isMe) ...[
+              // Avatar ResahAI
+              Container(
+                width: 36,
+                height: 36,
+                margin: const EdgeInsets.only(right: 8, top: 2),
+                decoration: const BoxDecoration(
+                  gradient: AppColors.primaryGradient,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.psychology_rounded,
+                  color: Colors.white,
+                  size: 20,
+                ),
+              ),
+            ],
+            Flexible(
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                constraints: BoxConstraints(
+                  maxWidth: MediaQuery.of(context).size.width * 0.68,
+                ),
+                decoration: BoxDecoration(
+                  color: isMe
+                      ? AppColors.primary
+                      : AppColors.primaryLight,
+                  borderRadius: BorderRadius.only(
+                    topLeft: const Radius.circular(20),
+                    topRight: const Radius.circular(20),
+                    bottomLeft: Radius.circular(isMe ? 20 : 4),
+                    bottomRight: Radius.circular(isMe ? 4 : 20),
+                  ),
+                ),
+                child: MarkdownBody(
+                  data: message,
+                  styleSheet: MarkdownStyleSheet(
+                    p: TextStyle(
+                      color: isMe ? Colors.white : AppColors.textPrimary,
+                      fontSize: 14,
+                      height: 1.5,
                     ),
-                  ],
+                    strong: TextStyle(
+                      color: isMe ? Colors.white : AppColors.textPrimary,
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
               ),
             ),
           ],
         ),
-      ),
-    );
+      );
+    }
   }
-}
 
-// ── Sub-widgets ──────────────────────────────────────────────
+  class _TypingIndicator extends StatefulWidget {
+    const _TypingIndicator();
 
-class _HeaderIconButton extends StatelessWidget {
-  final IconData icon;
-  final VoidCallback onTap;
-
-  const _HeaderIconButton({required this.icon, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 40,
-        height: 40,
-        decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.25),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Icon(icon, color: Colors.white, size: 24),
-      ),
-    );
+    @override
+    State<_TypingIndicator> createState() => _TypingIndicatorState();
   }
-}
 
-class _ChatBubble extends StatelessWidget {
-  final String message;
-  final bool isMe;
+  class _TypingIndicatorState extends State<_TypingIndicator>
+      with SingleTickerProviderStateMixin {
+    late AnimationController _controller;
 
-  const _ChatBubble({required this.message, required this.isMe});
+    @override
+    void initState() {
+      super.initState();
+      _controller = AnimationController(
+        vsync: this,
+        duration: const Duration(milliseconds: 900),
+      )..repeat();
+    }
 
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
-      child: Row(
-        mainAxisAlignment: isMe
-            ? MainAxisAlignment.end
-            : MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (!isMe) ...[
-            // Avatar ResahAI
+    @override
+    void dispose() {
+      _controller.dispose();
+      super.dispose();
+    }
+
+    @override
+    Widget build(BuildContext context) {
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 14),
+        child: Row(
+          children: [
             Container(
               width: 36,
               height: 36,
-              margin: const EdgeInsets.only(right: 8, top: 2),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF3D8BFF), Color(0xFF7FBBFF)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
+              margin: const EdgeInsets.only(right: 8),
+              decoration: const BoxDecoration(
+                gradient: AppColors.primaryGradient,
                 shape: BoxShape.circle,
               ),
               child: const Icon(
@@ -426,183 +474,92 @@ class _ChatBubble extends StatelessWidget {
                 size: 20,
               ),
             ),
-          ],
-          Flexible(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              constraints: BoxConstraints(
-                maxWidth: MediaQuery.of(context).size.width * 0.68,
-              ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               decoration: BoxDecoration(
-                color: isMe
-                    ? AppColors.primaryNormalActive
-                    : const Color(0xFFEEF4FF),
-                borderRadius: BorderRadius.only(
-                  topLeft: const Radius.circular(20),
-                  topRight: const Radius.circular(20),
-                  bottomLeft: Radius.circular(isMe ? 20 : 4),
-                  bottomRight: Radius.circular(isMe ? 4 : 20),
-                ),
+                color: AppColors.primaryLight,
+                borderRadius: BorderRadius.circular(20),
               ),
-              child: MarkdownBody(
-                data: message,
-                styleSheet: MarkdownStyleSheet(
-                  p: TextStyle(
-                    color: isMe ? Colors.white : Colors.black87,
-                    fontSize: 14,
-                    height: 1.5,
-                  ),
-                  strong: TextStyle(
-                    color: isMe ? Colors.white : Colors.black87,
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+              child: AnimatedBuilder(
+                animation: _controller,
+                builder: (context, _) {
+                  return Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: List.generate(3, (i) {
+                      final offset = ((_controller.value * 3 - i) % 1.0).clamp(
+                        0.0,
+                        1.0,
+                      );
+                      final opacity = offset < 0.5
+                          ? offset * 2
+                          : (1.0 - offset) * 2;
+                      return Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 3),
+                        width: 7,
+                        height: 7,
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withOpacity(0.3 + opacity * 0.7),
+                          shape: BoxShape.circle,
+                        ),
+                      );
+                    }),
+                  );
+                },
               ),
             ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _TypingIndicator extends StatefulWidget {
-  const _TypingIndicator();
-
-  @override
-  State<_TypingIndicator> createState() => _TypingIndicatorState();
-}
-
-class _TypingIndicatorState extends State<_TypingIndicator>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 900),
-    )..repeat();
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
-      child: Row(
-        children: [
-          Container(
-            width: 36,
-            height: 36,
-            margin: const EdgeInsets.only(right: 8),
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Color(0xFF3D8BFF), Color(0xFF7FBBFF)],
-              ),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.psychology_rounded,
-              color: Colors.white,
-              size: 20,
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            decoration: BoxDecoration(
-              color: const Color(0xFFEEF4FF),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: AnimatedBuilder(
-              animation: _controller,
-              builder: (context, _) {
-                return Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: List.generate(3, (i) {
-                    final offset = ((_controller.value * 3 - i) % 1.0).clamp(
-                      0.0,
-                      1.0,
-                    );
-                    final opacity = offset < 0.5
-                        ? offset * 2
-                        : (1.0 - offset) * 2;
-                    return Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 3),
-                      width: 7,
-                      height: 7,
-                      decoration: BoxDecoration(
-                        color: Color(
-                          0xFF3D8BFF,
-                        ).withOpacity(0.3 + opacity * 0.7),
-                        shape: BoxShape.circle,
-                      ),
-                    );
-                  }),
-                );
-              },
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class QuickActionChip extends StatelessWidget {
-  final String label;
-  final IconData icon;
-  final VoidCallback? onTap;
-  final bool isEmergency;
-
-  const QuickActionChip({
-    super.key,
-    required this.label,
-    required this.icon,
-    this.onTap,
-    this.isEmergency = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(right: 10),
-      child: ActionChip(
-        backgroundColor: isEmergency
-            ? const Color(0xffFFEBEB)
-            : const Color(0xFFEEF4FF),
-        side: BorderSide(
-          color: isEmergency
-              ? const Color(0xffFF6B6B)
-              : const Color(0xFFD0E4FF),
+          ],
         ),
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-        avatar: Icon(
-          icon,
-          size: 16,
-          color: isEmergency
-              ? const Color(0xffFF6B6B)
-              : const Color(0xFF3D8BFF),
-        ),
-        label: Text(
-          label,
-          style: TextStyle(
-            fontSize: 13,
+      );
+    }
+  }
+
+  class QuickActionChip extends StatelessWidget {
+    final String label;
+    final IconData icon;
+    final VoidCallback? onTap;
+    final bool isEmergency;
+
+    const QuickActionChip({
+      super.key,
+      required this.label,
+      required this.icon,
+      this.onTap,
+      this.isEmergency = false,
+    });
+
+    @override
+    Widget build(BuildContext context) {
+      return Container(
+        margin: const EdgeInsets.only(right: 10),
+        child: ActionChip(
+          backgroundColor: isEmergency
+              ? AppColors.redLight
+              : AppColors.primaryLight,
+          side: BorderSide(
             color: isEmergency
-                ? const Color(0xffFF6B6B)
-                : const Color(0xFF3D8BFF),
+                ? AppColors.redNormal
+                : AppColors.primaryLightHover,
           ),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          avatar: Icon(
+            icon,
+            size: 16,
+            color: isEmergency
+                ? AppColors.redNormal
+                : AppColors.primary,
+          ),
+          label: Text(
+            label,
+            style: TextStyle(
+              fontSize: 13,
+              color: isEmergency
+                  ? AppColors.redNormal
+                  : AppColors.primary,
+            ),
+          ),
+          onPressed: onTap ?? () {},
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         ),
-        onPressed: onTap ?? () {},
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      ),
-    );
+      );
+    }
   }
-}
