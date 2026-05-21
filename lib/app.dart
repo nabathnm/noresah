@@ -9,9 +9,12 @@ import 'core/providers/journal_provider.dart';
 import 'core/providers/chat_provider.dart';
 import 'core/utils/constant/app_colors.dart';
 import 'features/auth/login/pages/login_page.dart';
+import 'features/auth/onboarding/providers/onboarding_provider.dart';
+import 'core/utils/widgets/auth_gate.dart';
 
 class App extends StatelessWidget {
   const App({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
@@ -23,10 +26,11 @@ class App extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => MoodProvider()),
         ChangeNotifierProvider(create: (_) => JournalProvider()),
         ChangeNotifierProvider(create: (_) => ChatProvider()),
+        ChangeNotifierProvider(create: (_) => OnboardingProvider()),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
-        title: 'UBMentalCare',
+        title: 'Noresah',
         theme: ThemeData(
           colorScheme: ColorScheme.fromSeed(
             seedColor: AppColors.primary,
@@ -57,7 +61,7 @@ class App extends StatelessWidget {
             ),
           ),
         ),
-        home: const LoginPage(),
+        home: const AuthGate(),
       ),
     );
   }

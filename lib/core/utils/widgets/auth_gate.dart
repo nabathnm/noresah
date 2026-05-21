@@ -74,14 +74,12 @@ class _AuthGateState extends State<AuthGate> {
     }
 
     // Route based on role first, especially for psychologist to skip onboarding
-    final role = profileProvider.profile?['role'] ?? 'user';
+    final role = profileProvider.profile?.role ?? 'user';
     if (role == 'psychologist') {
       return const PsikologNavigation();
     }
 
-    final bool isOnboardingCompleted =
-        profileProvider.profile?['is_onboarding_completed'] == true;
-    if (!isOnboardingCompleted) {
+    if (!profileProvider.isOnboardingCompleted) {
       return const OnboardingPage();
     }
 

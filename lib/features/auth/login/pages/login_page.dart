@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/utils/widgets/auth_gate.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/utils/constant/app_colors.dart';
 import '../../register/pages/register_page.dart';
@@ -6,7 +7,6 @@ import '../../../user/widgets/navigation.dart';
 import '../../../psikolog/widgets/psikolog_navigation.dart';
 
 enum LoginRole { user, psikolog }
-
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
@@ -58,7 +58,7 @@ class _LoginPageState extends State<LoginPage> {
 
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => destination),
+          MaterialPageRoute(builder: (context) => const AuthGate()),
         );
       }
     } on AuthException catch (e) {

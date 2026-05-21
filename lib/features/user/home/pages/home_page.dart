@@ -52,7 +52,7 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     final profileProvider = context.watch<ProfileProvider>();
-    final nickname = profileProvider.profile?['nickname'] ?? 'Kak';
+    final nickname = profileProvider.profile?.nickname ?? 'Kak';
 
     DistressLevel? currentLevel;
     try {

@@ -30,7 +30,7 @@ class _ProfilePageState extends State<ProfilePage> {
     final profile = profileProvider.profile;
     final isLoading = profileProvider.isLoading;
 
-    final nickname = profile?['nickname'] ?? 'Memuat...';
+    final nickname = profile?.nickname ?? 'Memuat...';
 
     return Scaffold(
       backgroundColor: AppColors.netralLight,
