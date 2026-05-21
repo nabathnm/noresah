@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../features/auth/login/pages/login_page.dart';
 import '../../../features/auth/onboarding/pages/onboarding_page.dart';
 import '../../../features/user/widgets/navigation.dart';
+import '../../../features/psychologist/widgets/psychologist_navigation.dart';
 import '../../providers/profile_provider.dart';
 
 /// AuthGate decides which screen to show based on auth state + onboarding status.
@@ -78,6 +79,12 @@ class _AuthGateState extends State<AuthGate> {
           child: CircularProgressIndicator(),
         ),
       );
+    }
+
+    // Route based on role first, especially for psychologist to skip onboarding
+    final role = profileProvider.profile?.role ?? 'user';
+    if (role == 'psychologist') {
+      return const PsychologistNavigation();
     }
 
     if (!profileProvider.isOnboardingCompleted) {
