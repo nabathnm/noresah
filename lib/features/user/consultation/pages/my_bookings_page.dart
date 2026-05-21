@@ -140,7 +140,9 @@ class _BookingCard extends StatelessWidget {
                 radius: 24,
                 backgroundColor: AppColors.primaryLight,
                 child: Text(
-                  booking.psychologistName.split(' ').last[0],
+                  booking.psychologistName.isNotEmpty
+                      ? booking.psychologistName.split(' ').last[0]
+                      : 'P',
                   style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
