@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:provider/provider.dart';
 import 'package:noresah/core/utils/constant/app_colors.dart';
+import 'package:noresah/core/models/distress_classification.dart';
+import 'package:noresah/core/providers/classification_provider.dart';
+import '../../emergency/pages/emergency_page.dart';
 import '../service/chat_service.dart';
 
 class ChatPage extends StatefulWidget {
@@ -16,10 +20,45 @@ class _ChatPageState extends State<ChatPage> {
   final ScrollController _scrollController = ScrollController();
 
   bool _isLoading = false;
+  bool _showEmergencyBanner = false;
 
   final List<Map<String, dynamic>> _messages = [
-    {'isMe': false, 'message': 'Halo aku Mbudi 👋 Bagaimana kabarmu hari ini?'},
+    {
+      'isMe': false,
+      'message':
+          'Halo, aku **UBMentalCareAI** 👋\n\nSenang kamu ada di sini. Aku akan menemanimu. Bagaimana kabarmu hari ini?',
+    },
   ];
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Setup classification callback
+    _chatService.onClassificationDetected = (level) {
+      try {
+        final provider = Provider.of<ClassificationProvider>(
+          context,
+          listen: false,
+        );
+        provider.updateLevel(level);
+        provider.saveClassification(
+          level: level,
+          summary: 'Klasifikasi dari percakapan chat',
+        );
+      } catch (_) {}
+
+      // Jika kritis, tampilkan banner darurat
+      if (level == DistressLevel.kritis) {
+        setState(() => _showEmergencyBanner = true);
+      }
+    };
+
+    // Setup emergency callback
+    _chatService.onEmergencyDetected = () {
+      setState(() => _showEmergencyBanner = true);
+    };
+  }
 
   @override
   void dispose() {
@@ -62,12 +101,19 @@ class _ChatPageState extends State<ChatPage> {
         _messages.add({
           'isMe': false,
           'message':
-              'Maaf, saya tidak dapat memproses permintaan Anda saat ini.',
+              'Maaf, saya tidak dapat memproses permintaan kamu saat ini. Silakan coba lagi.',
         });
       }
     });
 
     _scrollToBottom();
+  }
+
+  void _navigateToEmergency() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const EmergencyPage()),
+    );
   }
 
   @override
@@ -89,7 +135,7 @@ class _ChatPageState extends State<ChatPage> {
                   ),
                   const Expanded(
                     child: Text(
-                      'ChatBot',
+                      'UBMentalCareAI',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         color: Colors.white,
@@ -98,7 +144,10 @@ class _ChatPageState extends State<ChatPage> {
                       ),
                     ),
                   ),
-                  _HeaderIconButton(icon: Icons.search_rounded, onTap: () {}),
+                  _HeaderIconButton(
+                    icon: Icons.emergency_rounded,
+                    onTap: _navigateToEmergency,
+                  ),
                 ],
               ),
             ),
@@ -112,6 +161,65 @@ class _ChatPageState extends State<ChatPage> {
                 ),
                 child: Column(
                   children: [
+                    // Emergency Banner
+                    if (_showEmergencyBanner)
+                      GestureDetector(
+                        onTap: _navigateToEmergency,
+                        child: Container(
+                          width: double.infinity,
+                          margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Color(0xffFF6B6B), Color(0xffFF8E8E)],
+                            ),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(
+                                Icons.emergency_rounded,
+                                color: Colors.white,
+                                size: 24,
+                              ),
+                              const SizedBox(width: 12),
+                              const Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Butuh bantuan segera?',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                    Text(
+                                      'Hubungi 119 ext 8 atau klik di sini',
+                                      style: TextStyle(
+                                        color: Colors.white70,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              GestureDetector(
+                                onTap: () => setState(
+                                  () => _showEmergencyBanner = false,
+                                ),
+                                child: const Icon(
+                                  Icons.close,
+                                  color: Colors.white70,
+                                  size: 20,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+
                     // Message list
                     Expanded(
                       child: ListView.builder(
@@ -143,40 +251,46 @@ class _ChatPageState extends State<ChatPage> {
                         scrollDirection: Axis.horizontal,
                         children: [
                           QuickActionChip(
-                            label: 'Breathing',
+                            label: 'Latihan Napas',
                             icon: Icons.air,
                             onTap: () {
                               _messageController.text =
-                                  'I want to do a breathing exercise.';
+                                  'Aku ingin melakukan latihan pernapasan.';
                               _sendMessage();
                             },
                           ),
                           QuickActionChip(
-                            label: 'Meditation',
+                            label: 'Grounding',
                             icon: Icons.self_improvement,
                             onTap: () {
                               _messageController.text =
-                                  'I want to do meditation.';
+                                  'Tolong bantu aku dengan teknik grounding.';
                               _sendMessage();
                             },
                           ),
                           QuickActionChip(
-                            label: 'Sleep Tips',
+                            label: 'Tips Tidur',
                             icon: Icons.bedtime,
                             onTap: () {
                               _messageController.text =
-                                  'Give me some sleep tips.';
+                                  'Berikan aku tips untuk tidur lebih baik.';
                               _sendMessage();
                             },
                           ),
                           QuickActionChip(
-                            label: 'Motivation',
+                            label: 'Motivasi',
                             icon: Icons.favorite,
                             onTap: () {
                               _messageController.text =
-                                  'I need some motivation today.';
+                                  'Aku butuh motivasi hari ini.';
                               _sendMessage();
                             },
+                          ),
+                          QuickActionChip(
+                            label: 'Darurat',
+                            icon: Icons.emergency_rounded,
+                            onTap: _navigateToEmergency,
+                            isEmergency: true,
                           ),
                         ],
                       ),
@@ -205,7 +319,7 @@ class _ChatPageState extends State<ChatPage> {
                                   onSubmitted: (_) => _sendMessage(),
                                   style: const TextStyle(fontSize: 14),
                                   decoration: const InputDecoration(
-                                    hintText: 'write a message...',
+                                    hintText: 'Ceritakan perasaanmu...',
                                     hintStyle: TextStyle(
                                       color: Colors.grey,
                                       fontSize: 14,
@@ -230,9 +344,9 @@ class _ChatPageState extends State<ChatPage> {
                                   borderRadius: BorderRadius.circular(16),
                                 ),
                                 child: const Icon(
-                                  Icons.mic_rounded,
+                                  Icons.send_rounded,
                                   color: Colors.white,
-                                  size: 24,
+                                  size: 22,
                                 ),
                               ),
                             ),
@@ -293,17 +407,21 @@ class _ChatBubble extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (!isMe) ...[
-            // Avatar maskot
+            // Avatar ResahAI
             Container(
               width: 36,
               height: 36,
               margin: const EdgeInsets.only(right: 8, top: 2),
               decoration: BoxDecoration(
-                color: AppColors.primaryNormalActive,
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF3D8BFF), Color(0xFF7FBBFF)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
                 shape: BoxShape.circle,
               ),
               child: const Icon(
-                Icons.smart_toy_outlined,
+                Icons.psychology_rounded,
                 color: Colors.white,
                 size: 20,
               ),
@@ -386,11 +504,13 @@ class _TypingIndicatorState extends State<_TypingIndicator>
             height: 36,
             margin: const EdgeInsets.only(right: 8),
             decoration: const BoxDecoration(
-              color: Color(0xFF3D8BFF),
+              gradient: LinearGradient(
+                colors: [Color(0xFF3D8BFF), Color(0xFF7FBBFF)],
+              ),
               shape: BoxShape.circle,
             ),
             child: const Icon(
-              Icons.smart_toy_outlined,
+              Icons.psychology_rounded,
               color: Colors.white,
               size: 20,
             ),
@@ -440,12 +560,14 @@ class QuickActionChip extends StatelessWidget {
   final String label;
   final IconData icon;
   final VoidCallback? onTap;
+  final bool isEmergency;
 
   const QuickActionChip({
     super.key,
     required this.label,
     required this.icon,
     this.onTap,
+    this.isEmergency = false,
   });
 
   @override
@@ -453,13 +575,30 @@ class QuickActionChip extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(right: 10),
       child: ActionChip(
-        backgroundColor: const Color(0xFFEEF4FF),
-        side: const BorderSide(color: Color(0xFFD0E4FF)),
+        backgroundColor: isEmergency
+            ? const Color(0xffFFEBEB)
+            : const Color(0xFFEEF4FF),
+        side: BorderSide(
+          color: isEmergency
+              ? const Color(0xffFF6B6B)
+              : const Color(0xFFD0E4FF),
+        ),
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-        avatar: Icon(icon, size: 16, color: Color(0xFF3D8BFF)),
+        avatar: Icon(
+          icon,
+          size: 16,
+          color: isEmergency
+              ? const Color(0xffFF6B6B)
+              : const Color(0xFF3D8BFF),
+        ),
         label: Text(
           label,
-          style: const TextStyle(fontSize: 13, color: Color(0xFF3D8BFF)),
+          style: TextStyle(
+            fontSize: 13,
+            color: isEmergency
+                ? const Color(0xffFF6B6B)
+                : const Color(0xFF3D8BFF),
+          ),
         ),
         onPressed: onTap ?? () {},
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
