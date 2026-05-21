@@ -16,7 +16,41 @@ class BookingDetailPage extends StatefulWidget {
 class _BookingDetailPageState extends State<BookingDetailPage> {
   DateTime? _selectedDate;
   TimeOfDay? _selectedTime;
+  List<TimeOfDay> _bookedSlots = [];
+  bool _isLoadingSlots = false;
   final _notesController = TextEditingController();
+
+  final List<TimeOfDay> _availableTimeSlots = [
+    const TimeOfDay(hour: 8, minute: 0),
+    const TimeOfDay(hour: 9, minute: 0),
+    const TimeOfDay(hour: 10, minute: 0),
+    const TimeOfDay(hour: 11, minute: 0),
+    const TimeOfDay(hour: 12, minute: 0),
+    const TimeOfDay(hour: 13, minute: 0),
+  ];
+
+  late List<DateTime> _availableDates;
+
+  @override
+  void initState() {
+    super.initState();
+    _generateAvailableDates();
+  }
+
+  void _generateAvailableDates() {
+    _availableDates = [];
+    DateTime now = DateTime.now();
+    // Start from tomorrow
+    DateTime current = DateTime(now.year, now.month, now.day).add(const Duration(days: 1));
+    
+    // Generate dates for the next 14 weekdays
+    while (_availableDates.length < 14) {
+      if (current.weekday >= DateTime.monday && current.weekday <= DateTime.friday) {
+        _availableDates.add(current);
+      }
+      current = current.add(const Duration(days: 1));
+    }
+  }
 
   @override
   void dispose() {
@@ -24,41 +58,56 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
     super.dispose();
   }
 
-  Future<void> _pickDate() async {
-    final date = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now().add(const Duration(days: 1)),
-      firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(const Duration(days: 90)),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(primary: AppColors.primary),
-          ),
-          child: child!,
-        );
-      },
-    );
-    if (date != null) {
-      setState(() => _selectedDate = date);
+  Future<void> _onDateSelected(DateTime date) async {
+    setState(() {
+      _selectedDate = date;
+      _selectedTime = null; // Reset time when date changes
+      _isLoadingSlots = true;
+    });
+
+    final provider = Provider.of<BookingProvider>(context, listen: false);
+    final booked = await provider.fetchBookingsForPsychologist(widget.psychologist.id, date);
+    
+    if (mounted) {
+      setState(() {
+        _bookedSlots = booked;
+        _isLoadingSlots = false;
+      });
     }
   }
 
-  Future<void> _pickTime() async {
-    final time = await showTimePicker(
-      context: context,
-      initialTime: const TimeOfDay(hour: 9, minute: 0),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(primary: AppColors.primary),
-          ),
-          child: child!,
-        );
-      },
-    );
-    if (time != null) {
-      setState(() => _selectedTime = time);
+  bool _isSlotBooked(TimeOfDay slot) {
+    return _bookedSlots.any((b) => b.hour == slot.hour && b.minute == slot.minute);
+  }
+
+  String _getWeekdayName(int weekday) {
+    switch (weekday) {
+      case 1: return 'Sen';
+      case 2: return 'Sel';
+      case 3: return 'Rab';
+      case 4: return 'Kam';
+      case 5: return 'Jum';
+      case 6: return 'Sab';
+      case 7: return 'Min';
+      default: return '';
+    }
+  }
+
+  String _getMonthName(int month) {
+    switch (month) {
+      case 1: return 'Jan';
+      case 2: return 'Feb';
+      case 3: return 'Mar';
+      case 4: return 'Apr';
+      case 5: return 'Mei';
+      case 6: return 'Jun';
+      case 7: return 'Jul';
+      case 8: return 'Agu';
+      case 9: return 'Sep';
+      case 10: return 'Okt';
+      case 11: return 'Nov';
+      case 12: return 'Des';
+      default: return '';
     }
   }
 
@@ -214,7 +263,9 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
                     radius: 40,
                     backgroundColor: AppColors.primaryLight,
                     child: Text(
-                      doctor.name.split(' ').last[0],
+                      doctor.name.isNotEmpty
+                          ? doctor.name.split(' ').last[0]
+                          : 'P',
                       style: const TextStyle(
                         fontSize: 32,
                         fontWeight: FontWeight.bold,
@@ -237,8 +288,9 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    doctor.experience,
+                    doctor.bio ?? doctor.experience,
                     style: TextStyle(color: Colors.grey.shade500, fontSize: 13),
+                    textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 16),
                   Row(
@@ -279,99 +331,158 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
 
             const SizedBox(height: 24),
 
-            // Date Picker
+            // Date Picker (Horizontal List)
             const Text(
               'Pilih Tanggal',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
-            GestureDetector(
-              onTap: _pickDate,
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(18),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(18),
-                  border: Border.all(
-                    color: _selectedDate != null
-                        ? AppColors.primary
-                        : Colors.grey.shade200,
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.calendar_today_rounded,
-                      color: _selectedDate != null
-                          ? AppColors.primary
-                          : Colors.grey,
-                    ),
-                    const SizedBox(width: 14),
-                    Text(
-                      _selectedDate != null
-                          ? '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}'
-                          : 'Pilih tanggal konsultasi',
-                      style: TextStyle(
-                        fontSize: 15,
-                        color: _selectedDate != null
-                            ? Colors.black87
-                            : Colors.grey,
+            SizedBox(
+              height: 90,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: _availableDates.length,
+                itemBuilder: (context, index) {
+                  final date = _availableDates[index];
+                  final isSelected = _selectedDate == date;
+                  return GestureDetector(
+                    onTap: () => _onDateSelected(date),
+                    child: Container(
+                      width: 70,
+                      margin: const EdgeInsets.only(right: 12),
+                      decoration: BoxDecoration(
+                        color: isSelected ? AppColors.primary : Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: isSelected ? AppColors.primary : Colors.grey.shade200,
+                        ),
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            _getWeekdayName(date.weekday),
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: isSelected ? Colors.white70 : Colors.grey.shade600,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '${date.day}',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: isSelected ? Colors.white : Colors.black87,
+                            ),
+                          ),
+                          Text(
+                            _getMonthName(date.month),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: isSelected ? Colors.white70 : Colors.grey.shade600,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  ],
-                ),
+                  );
+                },
               ),
             ),
 
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
 
-            // Time Picker
+            // Time Picker (Grid)
             const Text(
               'Pilih Waktu',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
-            GestureDetector(
-              onTap: _pickTime,
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(18),
+            if (_selectedDate == null)
+              Container(
+                padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(18),
-                  border: Border.all(
-                    color: _selectedTime != null
-                        ? AppColors.primary
-                        : Colors.grey.shade200,
-                  ),
+                  color: Colors.orange.shade50,
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                child: Row(
+                child: const Row(
                   children: [
-                    Icon(
-                      Icons.access_time_rounded,
-                      color: _selectedTime != null
-                          ? AppColors.primary
-                          : Colors.grey,
-                    ),
-                    const SizedBox(width: 14),
-                    Text(
-                      _selectedTime != null
-                          ? '${_selectedTime!.hour.toString().padLeft(2, '0')}:${_selectedTime!.minute.toString().padLeft(2, '0')}'
-                          : 'Pilih waktu konsultasi',
-                      style: TextStyle(
-                        fontSize: 15,
-                        color: _selectedTime != null
-                            ? Colors.black87
-                            : Colors.grey,
+                    Icon(Icons.info_outline, color: Colors.orange),
+                    SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Pilih tanggal terlebih dahulu untuk melihat jadwal yang tersedia.',
+                        style: TextStyle(color: Colors.orange),
                       ),
                     ),
                   ],
                 ),
-              ),
-            ),
+              )
+            else if (_isLoadingSlots)
+              const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(24.0),
+                  child: CircularProgressIndicator(color: AppColors.primary),
+                ),
+              )
+            else
+              GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 3,
+                  childAspectRatio: 2.5,
+                  crossAxisSpacing: 12,
+                  mainAxisSpacing: 12,
+                ),
+                itemCount: _availableTimeSlots.length,
+                itemBuilder: (context, index) {
+                  final slot = _availableTimeSlots[index];
+                  final isBooked = _isSlotBooked(slot);
+                  final isSelected = _selectedTime == slot;
 
-            const SizedBox(height: 20),
+                  return GestureDetector(
+                    onTap: isBooked
+                        ? null
+                        : () {
+                            setState(() => _selectedTime = slot);
+                          },
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: isBooked
+                            ? Colors.grey.shade200
+                            : isSelected
+                                ? AppColors.primary
+                                : Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: isBooked
+                              ? Colors.grey.shade300
+                              : isSelected
+                                  ? AppColors.primary
+                                  : AppColors.primary.withOpacity(0.3),
+                        ),
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        '${slot.hour.toString().padLeft(2, '0')}:${slot.minute.toString().padLeft(2, '0')}',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: isBooked
+                              ? Colors.grey.shade500
+                              : isSelected
+                                  ? Colors.white
+                                  : AppColors.primary,
+                          decoration: isBooked ? TextDecoration.lineThrough : null,
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+
+            const SizedBox(height: 24),
 
             // Notes
             const Text(

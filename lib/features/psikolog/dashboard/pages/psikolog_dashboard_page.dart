@@ -231,7 +231,7 @@ class _PsikologDashboardPageState extends State<PsikologDashboardPage> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Pasien',
+                                booking.userNickname ?? 'Pasien',
                                 style: const TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 15,

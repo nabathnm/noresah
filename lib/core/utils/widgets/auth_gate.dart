@@ -4,8 +4,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../features/auth/login/pages/login_page.dart';
 import '../../../features/auth/onboarding/pages/onboarding_page.dart';
 import '../../../features/user/widgets/navigation.dart';
-import '../../../features/psychologist/widgets/psychologist_navigation.dart';
 import '../../providers/profile_provider.dart';
+import '../../../features/psikolog/widgets/psikolog_navigation.dart';
 
 /// AuthGate decides which screen to show based on auth state + onboarding status.
 ///
@@ -58,11 +58,7 @@ class _AuthGateState extends State<AuthGate> {
 
     // Show loading while checking profile
     if (_isCheckingProfile && user != null) {
-      return const Scaffold(
-        body: Center(
-          child: CircularProgressIndicator(),
-        ),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     // Not authenticated → Login
@@ -74,17 +70,13 @@ class _AuthGateState extends State<AuthGate> {
     final profileProvider = context.watch<ProfileProvider>();
 
     if (profileProvider.isLoading) {
-      return const Scaffold(
-        body: Center(
-          child: CircularProgressIndicator(),
-        ),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     // Route based on role first, especially for psychologist to skip onboarding
     final role = profileProvider.profile?.role ?? 'user';
     if (role == 'psychologist') {
-      return const PsychologistNavigation();
+      return const PsikologNavigation();
     }
 
     if (!profileProvider.isOnboardingCompleted) {
