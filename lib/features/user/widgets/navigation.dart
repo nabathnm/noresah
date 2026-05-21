@@ -95,7 +95,12 @@ class _NavigationState extends State<Navigation> {
     return Transform.translate(
       offset: const Offset(0, 12),
       child: GestureDetector(
-        onTap: () => _onItemTapped(2),
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const ChatPage()),
+          );
+        },
         child: Container(
           width: 68,
           height: 68,

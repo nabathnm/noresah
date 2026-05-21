@@ -10,7 +10,7 @@ class AppColors {
   static const Color primaryLightHover = Color(0xffebe5e0);
   static const Color primaryLightActive = Color(0xffd6cabf);
   static const Color primaryNormalHover = Color(0xff6f4c2a);
-  static const Color primaryNormalActive = Color(0xff624326);
+  static const Color primaryNormalActive = Color(0xff3F86E3);
   static const Color primaryDark = Color(0xff5c3f23);
   static const Color primaryDarkHover = Color(0xff4a321c);
   static const Color primaryDarkActive = Color(0xff372615);
