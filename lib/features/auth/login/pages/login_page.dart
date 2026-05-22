@@ -3,11 +3,7 @@ import '../../../../core/utils/widgets/auth_gate.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/utils/constant/app_colors.dart';
 import '../../register/pages/register_page.dart';
-import '../../../user/widgets/navigation.dart';
-import '../../../psikolog/widgets/psikolog_navigation.dart';
-import '../../../../core/utils/widgets/auth_gate.dart';
 
-enum LoginRole { user, psikolog }
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -21,11 +17,7 @@ class _LoginPageState extends State<LoginPage> {
   final _passwordController = TextEditingController();
   bool _isLoading = false;
   bool _obscurePassword = true;
-  LoginRole _selectedRole = LoginRole.user;
 
-  String get _emailDomain => _selectedRole == LoginRole.user
-      ? '@student.ub.ac.id'
-      : '@psychologist.ub.ac.id';
 
   Future<void> _login() async {
     try {
@@ -37,14 +29,10 @@ class _LoginPageState extends State<LoginPage> {
         throw Exception('Harap isi semua kolom');
       }
 
-      // Validasi domain email sesuai role
-      if (_selectedRole == LoginRole.user &&
-          !email.endsWith('@student.ub.ac.id')) {
-        throw Exception('Email user harus berakhir @student.ub.ac.id');
-      }
-      if (_selectedRole == LoginRole.psikolog &&
+      // Validasi domain email
+      if (!email.endsWith('@student.ub.ac.id') &&
           !email.endsWith('@psychologist.ub.ac.id')) {
-        throw Exception('Email psikolog harus berakhir @psychologist.ub.ac.id');
+        throw Exception('Email harus menggunakan domain UB (@student.ub.ac.id atau @psychologist.ub.ac.id)');
       }
 
       await Supabase.instance.client.auth.signInWithPassword(
@@ -53,11 +41,6 @@ class _LoginPageState extends State<LoginPage> {
       );
 
       if (mounted) {
-        // Route berbeda berdasarkan role
-        final destination = _selectedRole == LoginRole.user
-            ? const Navigation()
-            : const PsikologNavigation();
-
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const AuthGate()),
@@ -144,38 +127,6 @@ class _LoginPageState extends State<LoginPage> {
                   style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 32),
-
-                // Role Toggle
-                Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.03),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    children: [
-                      _buildRoleTab(
-                        label: 'Mahasiswa',
-                        icon: Icons.school_rounded,
-                        role: LoginRole.user,
-                      ),
-                      _buildRoleTab(
-                        label: 'Psikolog',
-                        icon: Icons.psychology_rounded,
-                        role: LoginRole.psikolog,
-                      ),
-                    ],
-                  ),
-                ),
-
                 const SizedBox(height: 24),
 
                 // Form Container
@@ -196,7 +147,7 @@ class _LoginPageState extends State<LoginPage> {
                     children: [
                       _buildTextField(
                         controller: _emailController,
-                        hint: 'Email ($_emailDomain)',
+                        hint: 'Email (@student.ub.ac.id / @psychologist.ub.ac.id)',
                         icon: Icons.email_outlined,
                         keyboardType: TextInputType.emailAddress,
                       ),
@@ -243,7 +194,6 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 ),
                 const SizedBox(height: 32),
-                if (_selectedRole == LoginRole.user)
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -278,45 +228,7 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  Widget _buildRoleTab({
-    required String label,
-    required IconData icon,
-    required LoginRole role,
-  }) {
-    final isSelected = _selectedRole == role;
-    return Expanded(
-      child: GestureDetector(
-        onTap: () => setState(() => _selectedRole = role),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(vertical: 14),
-          decoration: BoxDecoration(
-            color: isSelected ? AppColors.primary : Colors.transparent,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                icon,
-                size: 20,
-                color: isSelected ? Colors.white : Colors.grey.shade600,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                label,
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: isSelected ? Colors.white : Colors.grey.shade600,
-                  fontSize: 14,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+
 
   Widget _buildTextField({
     required TextEditingController controller,

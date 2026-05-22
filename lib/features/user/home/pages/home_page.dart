@@ -7,7 +7,7 @@ import '../../../../core/models/mood_entry.dart';
 import '../../../../core/models/distress_classification.dart';
 import '../../../../core/utils/constant/app_colors.dart';
 import '../../chat/pages/chat_page.dart';
-import '../../emergency/pages/emergency_page.dart';
+import '../../chat/pages/emergency_page.dart';
 import '../../journal/pages/journal_list_page.dart';
 
 class HomePage extends StatefulWidget {

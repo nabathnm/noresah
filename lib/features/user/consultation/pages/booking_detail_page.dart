@@ -292,39 +292,6 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
                     style: TextStyle(color: Colors.grey.shade500, fontSize: 13),
                     textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 16),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.orange.shade50,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Row(
-                          children: [
-                            const Icon(
-                              Icons.star,
-                              size: 16,
-                              color: Colors.orange,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              doctor.rating.toString(),
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
                 ],
               ),
             ),
@@ -474,7 +441,6 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
                               : isSelected
                                   ? Colors.white
                                   : AppColors.primary,
-                          decoration: isBooked ? TextDecoration.lineThrough : null,
                         ),
                       ),
                     ),

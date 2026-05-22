@@ -181,7 +181,7 @@ class _ConsultationPageState extends State<ConsultationPage> {
                     itemCount: psychologists.length,
                     itemBuilder: (context, index) {
                       final doctor = psychologists[index];
-                      return _PsychologistCard(
+                      return PsychologistCard(
                         psychologist: doctor,
                         onBook: () {
                           Navigator.push(
@@ -202,11 +202,11 @@ class _ConsultationPageState extends State<ConsultationPage> {
   }
 }
 
-class _PsychologistCard extends StatelessWidget {
+class PsychologistCard extends StatelessWidget {
   final Psychologist psychologist;
   final VoidCallback onBook;
 
-  const _PsychologistCard({required this.psychologist, required this.onBook});
+  const PsychologistCard({required this.psychologist, required this.onBook});
 
   @override
   Widget build(BuildContext context) {
@@ -268,31 +268,6 @@ class _PsychologistCard extends StatelessWidget {
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 18),
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.orange.shade50,
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.star, size: 18, color: Colors.orange),
-                    const SizedBox(width: 6),
-                    Text(
-                      psychologist.rating.toString(),
-                      style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                   ],
                 ),
