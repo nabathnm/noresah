@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:noresah/core/providers/profile_provider.dart';
+import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/utils/constant/app_colors.dart';
 import '../../../auth/login/pages/login_page.dart';
@@ -9,7 +11,10 @@ class PsikologProfilePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final user = Supabase.instance.client.auth.currentUser;
-    final email = user?.email ?? 'psikolog@ub.ac.id';
+    final email = user?.email ?? 'psychologist@ub.ac.id';
+    final profileProvider = context.watch<ProfileProvider>();
+    final profile = profileProvider.profile;
+    final nickname = profile?.nickname ?? 'Memuat...';
 
     return Scaffold(
       backgroundColor: AppColors.netralLight,
@@ -56,8 +61,8 @@ class PsikologProfilePage extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  const Text(
-                    'Psikolog LKM UB',
+                  Text(
+                    nickname,
                     style: TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.bold,

@@ -58,6 +58,7 @@ class Booking {
   final int psychologistId;
   final String psychologistName;
   final String? userNickname;
+  final String? userEmail;
   final DateTime scheduledAt;
   final BookingStatus status;
   final String? notes;
@@ -68,6 +69,7 @@ class Booking {
     required this.userId,
     required this.psychologistId,
     required this.psychologistName,
+    this.userEmail,
     this.userNickname,
     required this.scheduledAt,
     this.status = BookingStatus.pending,

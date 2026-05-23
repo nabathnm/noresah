@@ -284,10 +284,10 @@ class _HomePageState extends State<HomePage> {
                         ],
                       ),
                     ),
-                    const Icon(
-                      Icons.arrow_forward_ios,
-                      color: AppColors.primary,
-                      size: 16,
+                    Image.asset(
+                      'assets/navbar/chatbot.png',
+                      width: 24,
+                      height: 24,
                     ),
                   ],
                 ),
@@ -320,18 +320,6 @@ class _HomePageState extends State<HomePage> {
                         label: type.label,
                         isSelected: todayMood?.mood == type,
                         onTap: () {
-                          if (todayMood != null) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  'Anda sudah mencatat mood hari ini! Silakan kembali besok 🌱',
-                                ),
-                                backgroundColor: AppColors.yellowNormal,
-                                duration: Duration(seconds: 2),
-                              ),
-                            );
-                            return;
-                          }
                           _showMoodDialog(
                             context,
                             type,
@@ -494,7 +482,7 @@ class _HomePageState extends State<HomePage> {
                       ),
                       const SizedBox(width: 10),
                       const Text(
-                        'Insight dari UBMentalCareAI',
+                        'Insight dari ResahAI',
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/booking.dart';
+import '../models/profile_model.dart';
 
 class BookingProvider with ChangeNotifier {
   final SupabaseClient _supabase = Supabase.instance.client;
@@ -10,6 +11,12 @@ class BookingProvider with ChangeNotifier {
 
   List<Booking> _psychologistBookings = [];
   List<Booking> get psychologistBookings => _psychologistBookings;
+
+  List<ProfileModel> _psychologistPatients = [];
+  List<ProfileModel> get psychologistPatients => _psychologistPatients;
+
+  List<ProfileModel> _allCriticalPatients = [];
+  List<ProfileModel> get allCriticalPatients => _allCriticalPatients;
 
   List<Psychologist> _psychologists = [];
   List<Psychologist> get psychologists => _psychologists;
@@ -174,6 +181,70 @@ class BookingProvider with ChangeNotifier {
     } finally {
       _isLoading = false;
       notifyListeners();
+    }
+  }
+
+  /// Ambil daftar pasien (mahasiswa) untuk psikolog saat ini
+  Future<void> fetchPsychologistPatients() async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      final user = _supabase.auth.currentUser;
+      if (user == null) return;
+
+      final psychProfile = await _supabase
+          .from('psychologist_profiles')
+          .select('id')
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+      if (psychProfile == null) {
+        _psychologistPatients = [];
+        return;
+      }
+      final int psychId = psychProfile['id'] as int;
+
+      final response = await _supabase
+          .from('bookings')
+          .select('user_id, profiles(*)')
+          .eq('psychologist_id', psychId);
+
+      final Map<String, ProfileModel> uniquePatients = {};
+      for (var row in (response as List)) {
+        final profileData = row['profiles'];
+        if (profileData != null) {
+          final profile = ProfileModel.fromJson(profileData as Map<String, dynamic>);
+          uniquePatients[profile.id] = profile;
+        }
+      }
+      
+      _psychologistPatients = uniquePatients.values.toList();
+    } catch (e) {
+      debugPrint('Error fetching psychologist patients: $e');
+      _psychologistPatients = [];
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  /// Ambil daftar seluruh mahasiswa yang sedang dalam kondisi kritis (mood <= -50) atau khawatir (mood <= -30)
+  Future<void> fetchAllCriticalPatients() async {
+    try {
+      final response = await _supabase
+          .from('profiles')
+          .select('*')
+          .eq('role', 'user')
+          .lte('mood_score', -30);
+
+      _allCriticalPatients = (response as List)
+          .map((json) => ProfileModel.fromJson(json))
+          .toList();
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Error fetching all critical patients: $e');
+      _allCriticalPatients = [];
     }
   }
 
