@@ -219,7 +219,40 @@ class BookingProvider with ChangeNotifier {
         }
       }
       
-      _psychologistPatients = uniquePatients.values.toList();
+      final List<ProfileModel> patients = uniquePatients.values.toList();
+      
+      // Fetch latest distress classifications for these patients
+      if (patients.isNotEmpty) {
+        final patientIds = patients.map((p) => p.id).toList();
+        final Map<String, int> latestAiLevels = {};
+        
+        try {
+          final classResponse = await _supabase
+              .from('distress_classifications')
+              .select('user_id, level')
+              .inFilter('user_id', patientIds)
+              .order('created_at', ascending: false);
+              
+          for (var row in (classResponse as List)) {
+            final userId = row['user_id'] as String;
+            if (!latestAiLevels.containsKey(userId)) {
+              latestAiLevels[userId] = row['level'] as int;
+            }
+          }
+        } catch (e) {
+          debugPrint('Notice: distress_classifications table might not exist yet: $e');
+        }
+        
+        _psychologistPatients = patients.map<ProfileModel>((p) {
+          if (latestAiLevels.containsKey(p.id)) {
+            return p.copyWith(aiDistressLevel: latestAiLevels[p.id]);
+          }
+          return p;
+        }).toList();
+      } else {
+        _psychologistPatients = [];
+      }
+      
     } catch (e) {
       debugPrint('Error fetching psychologist patients: $e');
       _psychologistPatients = [];
@@ -235,12 +268,47 @@ class BookingProvider with ChangeNotifier {
       final response = await _supabase
           .from('profiles')
           .select('*')
-          .eq('role', 'user')
-          .lte('mood_score', -30);
+          .eq('role', 'user');
 
-      _allCriticalPatients = (response as List)
+      List<ProfileModel> allPatients = (response as List)
           .map((json) => ProfileModel.fromJson(json))
           .toList();
+          
+      if (allPatients.isNotEmpty) {
+        final patientIds = allPatients.map((p) => p.id).toList();
+        final Map<String, int> latestAiLevels = {};
+        
+        try {
+          final classResponse = await _supabase
+              .from('distress_classifications')
+              .select('user_id, level')
+              .inFilter('user_id', patientIds)
+              .order('created_at', ascending: false);
+              
+          for (var row in (classResponse as List)) {
+            final userId = row['user_id'] as String;
+            if (!latestAiLevels.containsKey(userId)) {
+              latestAiLevels[userId] = row['level'] as int;
+            }
+          }
+        } catch (e) {
+          debugPrint('Notice: distress_classifications table might not exist yet: $e');
+        }
+        
+        allPatients = allPatients.map<ProfileModel>((p) {
+          if (latestAiLevels.containsKey(p.id)) {
+            return p.copyWith(aiDistressLevel: latestAiLevels[p.id]);
+          }
+          return p;
+        }).toList();
+      }
+          
+      // Filter patients who are critical based on mood OR AI distress level
+      _allCriticalPatients = allPatients.where((p) {
+        if (p.moodScore <= -30) return true;
+        if (p.aiDistressLevel != null && p.aiDistressLevel! >= 3) return true;
+        return false;
+      }).toList();
       notifyListeners();
     } catch (e) {
       debugPrint('Error fetching all critical patients: $e');

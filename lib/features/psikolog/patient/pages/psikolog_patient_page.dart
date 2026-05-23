@@ -134,8 +134,33 @@ class _PsikologPatientPageState extends State<PsikologPatientPage> {
   }
 
   Widget _buildPatientCard(ProfileModel patient) {
-    final level = DistressLevelExtension.fromMoodScore(patient.moodScore);
-    final color = _getLevelColor(level);
+    DistressLevel moodLevel = DistressLevelExtension.fromMoodScore(patient.moodScore);
+    DistressLevel finalLevel = moodLevel;
+    
+    if (patient.aiDistressLevel != null) {
+      DistressLevel aiLevel;
+      switch (patient.aiDistressLevel) {
+        case 1:
+          aiLevel = DistressLevel.aman;
+          break;
+        case 2:
+          aiLevel = DistressLevel.waspada;
+          break;
+        case 3:
+          aiLevel = DistressLevel.khawatir;
+          break;
+        case 4:
+          aiLevel = DistressLevel.kritis;
+          break;
+        default:
+          aiLevel = DistressLevel.aman;
+      }
+      if (aiLevel.numericValue > moodLevel.numericValue) {
+        finalLevel = aiLevel;
+      }
+    }
+    
+    final color = _getLevelColor(finalLevel);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -162,7 +187,7 @@ class _PsikologPatientPageState extends State<PsikologPatientPage> {
               shape: BoxShape.circle,
             ),
             child: Center(
-              child: Text(level.emoji, style: const TextStyle(fontSize: 24)),
+              child: Text(finalLevel.emoji, style: const TextStyle(fontSize: 24)),
             ),
           ),
           const SizedBox(width: 16),
@@ -199,7 +224,7 @@ class _PsikologPatientPageState extends State<PsikologPatientPage> {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  level.label,
+                  finalLevel.label,
                   style: TextStyle(
                     color: color,
                     fontSize: 12,
@@ -207,7 +232,7 @@ class _PsikologPatientPageState extends State<PsikologPatientPage> {
                   ),
                 ),
               ),
-              if (patient.moodScore <= -30) ...[
+              if (finalLevel.numericValue >= 3) ...[
                 const SizedBox(height: 8),
                 InkWell(
                   onTap: () async {
