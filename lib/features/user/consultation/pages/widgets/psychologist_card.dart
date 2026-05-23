@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../../../../core/utils/constant/app_colors.dart';
+import '../../../../../core/models/booking.dart';
 import '../../../../../core/models/booking.dart';
 import '../../../../../core/utils/constant/app_colors.dart';
 
@@ -53,11 +55,6 @@ class PsychologistCard extends StatelessWidget {
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                       ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      psychologist.specialist,
-                      style: TextStyle(color: Colors.grey.shade700),
                     ),
                     const SizedBox(height: 6),
                     Text(

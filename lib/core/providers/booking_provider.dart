@@ -20,22 +20,13 @@ class BookingProvider with ChangeNotifier {
   String _searchQuery = '';
   String get searchQuery => _searchQuery;
 
-  String _selectedCategory = 'All';
-  String get selectedCategory => _selectedCategory;
-
-  final List<String> categories = [
-    'All',
-    'Stress',
-    'Depression',
-    'Anxiety',
-    'Sleep',
-    'Burnout',
-  ];
-
   void setSearchQuery(String query) {
     _searchQuery = query;
     notifyListeners();
   }
+
+  String _selectedCategory = 'All';
+  String get selectedCategory => _selectedCategory;
 
   void setCategory(String category) {
     _selectedCategory = category;
@@ -45,22 +36,17 @@ class BookingProvider with ChangeNotifier {
   List<Psychologist> get filteredPsychologists {
     var result = _psychologists;
 
-    if (_selectedCategory != 'All') {
-      result = result
-          .where(
-            (p) => p.specialist.toLowerCase().contains(
-              _selectedCategory.toLowerCase(),
-            ),
-          )
-          .toList();
-    }
+    // Kategori tidak lagi memfilter psikolog karena semua psikolog bisa menangani semua genre.
+    // Filter berdasarkan kategori dihilangkan atau tidak melakukan apapun.
 
     if (_searchQuery.isNotEmpty) {
+      final query = _searchQuery.toLowerCase();
       result = result
           .where(
             (p) =>
-                p.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-                p.specialist.toLowerCase().contains(_searchQuery.toLowerCase()),
+                p.name.toLowerCase().contains(query) ||
+                (p.bio?.toLowerCase().contains(query) ?? false) ||
+                p.experience.toLowerCase().contains(query),
           )
           .toList();
     }
@@ -132,7 +118,9 @@ class BookingProvider with ChangeNotifier {
 
       final response = await _supabase
           .from('bookings')
-          .select('*, profiles(nickname), psychologist_profiles(profiles(nickname))')
+          .select(
+            '*, profiles(nickname), psychologist_profiles(profiles(nickname))',
+          )
           .eq('user_id', user.id)
           .order('booking_date', ascending: false)
           .order('start_time', ascending: false);
@@ -170,7 +158,9 @@ class BookingProvider with ChangeNotifier {
 
       final response = await _supabase
           .from('bookings')
-          .select('*, profiles(nickname), psychologist_profiles(profiles(nickname))')
+          .select(
+            '*, profiles(nickname), psychologist_profiles(profiles(nickname))',
+          )
           .eq('psychologist_id', psychId)
           .order('booking_date', ascending: false)
           .order('start_time', ascending: false);
@@ -188,9 +178,13 @@ class BookingProvider with ChangeNotifier {
   }
 
   /// Ambil jadwal booking yang sudah terisi untuk seorang psikolog pada tanggal tertentu
-  Future<List<TimeOfDay>> fetchBookingsForPsychologist(int psychId, DateTime date) async {
+  Future<List<TimeOfDay>> fetchBookingsForPsychologist(
+    int psychId,
+    DateTime date,
+  ) async {
     try {
-      final dateString = "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
+      final dateString =
+          "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
       final response = await _supabase
           .from('bookings')
           .select('start_time')
@@ -203,10 +197,12 @@ class BookingProvider with ChangeNotifier {
         if (row['start_time'] != null) {
           final timeParts = row['start_time'].toString().split(':');
           if (timeParts.length >= 2) {
-            bookedSlots.add(TimeOfDay(
-              hour: int.parse(timeParts[0]),
-              minute: int.parse(timeParts[1]),
-            ));
+            bookedSlots.add(
+              TimeOfDay(
+                hour: int.parse(timeParts[0]),
+                minute: int.parse(timeParts[1]),
+              ),
+            );
           }
         }
       }

@@ -40,4 +40,13 @@ class ProfileService {
 
     debugPrint('[ProfileService] Onboarding completed for $userId');
   }
+
+  /// Update mood score
+  Future<void> updateMoodScore(String userId, int newScore) async {
+    await _client.from('profiles').update({
+      'mood_score': newScore,
+    }).eq('id', userId);
+
+    debugPrint('[ProfileService] Mood score updated for $userId to $newScore');
+  }
 }

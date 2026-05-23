@@ -1,14 +1,14 @@
 /// Model untuk level klasifikasi distress/kecemasan user.
-enum DistressLevel { rendah, sedang, tinggi, kritis }
+enum DistressLevel { aman, waspada, khawatir, kritis }
 
 extension DistressLevelExtension on DistressLevel {
   String get label {
     switch (this) {
-      case DistressLevel.rendah:
+      case DistressLevel.aman:
         return 'Aman';
-      case DistressLevel.sedang:
+      case DistressLevel.waspada:
         return 'Waspada';
-      case DistressLevel.tinggi:
+      case DistressLevel.khawatir:
         return 'Khawatir';
       case DistressLevel.kritis:
         return 'Kritis';
@@ -17,11 +17,11 @@ extension DistressLevelExtension on DistressLevel {
 
   String get emoji {
     switch (this) {
-      case DistressLevel.rendah:
+      case DistressLevel.aman:
         return '🟢';
-      case DistressLevel.sedang:
+      case DistressLevel.waspada:
         return '🟡';
-      case DistressLevel.tinggi:
+      case DistressLevel.khawatir:
         return '🟠';
       case DistressLevel.kritis:
         return '🔴';
@@ -30,11 +30,11 @@ extension DistressLevelExtension on DistressLevel {
 
   String get description {
     switch (this) {
-      case DistressLevel.rendah:
+      case DistressLevel.aman:
         return 'Kamu terlihat cukup stabil. Tetap jaga kesehatan mentalmu!';
-      case DistressLevel.sedang:
+      case DistressLevel.waspada:
         return 'Ada tanda-tanda stres sedang. Pertimbangkan untuk bicara dengan seseorang.';
-      case DistressLevel.tinggi:
+      case DistressLevel.khawatir:
         return 'Kamu mungkin membutuhkan bantuan profesional. Pertimbangkan konsultasi.';
       case DistressLevel.kritis:
         return 'Kondisimu membutuhkan perhatian segera. Hubungi layanan darurat.';
@@ -43,11 +43,11 @@ extension DistressLevelExtension on DistressLevel {
 
   int get numericValue {
     switch (this) {
-      case DistressLevel.rendah:
+      case DistressLevel.aman:
         return 1;
-      case DistressLevel.sedang:
+      case DistressLevel.waspada:
         return 2;
-      case DistressLevel.tinggi:
+      case DistressLevel.khawatir:
         return 3;
       case DistressLevel.kritis:
         return 4;
@@ -57,20 +57,30 @@ extension DistressLevelExtension on DistressLevel {
   static DistressLevel fromString(String value) {
     switch (value.toLowerCase()) {
       case 'aman':
+      case 'rendah':
       case 'low':
-        return DistressLevel.rendah;
+        return DistressLevel.aman;
       case 'waspada':
+      case 'sedang':
       case 'medium':
-        return DistressLevel.sedang;
+        return DistressLevel.waspada;
       case 'khawatir':
+      case 'tinggi':
       case 'high':
-        return DistressLevel.tinggi;
+        return DistressLevel.khawatir;
       case 'kritis':
       case 'critical':
         return DistressLevel.kritis;
       default:
-        return DistressLevel.rendah;
+        return DistressLevel.aman;
     }
+  }
+
+  static DistressLevel fromMoodScore(int score) {
+    if (score <= -50) return DistressLevel.kritis;
+    if (score <= -30) return DistressLevel.khawatir;
+    if (score <= -10) return DistressLevel.waspada;
+    return DistressLevel.aman;
   }
 }
 
@@ -103,19 +113,19 @@ class DistressClassification {
     DistressLevel level;
     switch (levelValue) {
       case 1:
-        level = DistressLevel.rendah;
+        level = DistressLevel.aman;
         break;
       case 2:
-        level = DistressLevel.sedang;
+        level = DistressLevel.waspada;
         break;
       case 3:
-        level = DistressLevel.tinggi;
+        level = DistressLevel.khawatir;
         break;
       case 4:
         level = DistressLevel.kritis;
         break;
       default:
-        level = DistressLevel.rendah;
+        level = DistressLevel.aman;
     }
 
     return DistressClassification(

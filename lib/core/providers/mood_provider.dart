@@ -15,15 +15,24 @@ class MoodProvider with ChangeNotifier {
   bool get isLoading => _isLoading;
 
   /// Simpan mood hari ini
-  Future<void> saveMood(MoodType mood) async {
+  Future<void> saveMood(
+    MoodType mood, {
+    String? note,
+    required Function(int difference) onScoreChanged,
+  }) async {
     try {
       final user = _supabase.auth.currentUser;
       if (user == null) return;
+
+      int oldScore = _todayMood?.mood.numericValue ?? 0;
+      int newScore = mood.numericValue;
+      int difference = newScore - oldScore;
 
       final today = DateTime.now();
       final entry = MoodEntry(
         userId: user.id,
         mood: mood,
+        note: note,
         date: today,
         createdAt: today,
       );
@@ -36,12 +45,18 @@ class MoodProvider with ChangeNotifier {
 
       _todayMood = entry;
       notifyListeners();
+
+      // Notify caller to update profile score
+      if (difference != 0) {
+        onScoreChanged(difference);
+      }
     } catch (e) {
       debugPrint('Error saving mood: $e');
       // Simpan secara lokal jika Supabase gagal
       _todayMood = MoodEntry(
         userId: 'local',
         mood: mood,
+        note: note,
         date: DateTime.now(),
         createdAt: DateTime.now(),
       );

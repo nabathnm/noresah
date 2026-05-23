@@ -53,12 +53,21 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     final profileProvider = context.watch<ProfileProvider>();
     final nickname = profileProvider.profile?.nickname ?? 'Kak';
+    final moodScore = profileProvider.profile?.moodScore ?? 0;
+    final moodDistressLevel = DistressLevelExtension.fromMoodScore(moodScore);
 
-    DistressLevel? currentLevel;
+    DistressLevel? aiLevel;
     try {
       final classProvider = context.watch<ClassificationProvider>();
-      currentLevel = classProvider.currentLevel;
+      aiLevel = classProvider.currentLevel;
     } catch (_) {}
+
+    // Combine AI level and Mood level: take the highest distress
+    DistressLevel currentLevel = moodDistressLevel;
+    if (aiLevel != null &&
+        aiLevel.numericValue > moodDistressLevel.numericValue) {
+      currentLevel = aiLevel;
+    }
 
     final moodProvider = context.watch<MoodProvider>();
     final todayMood = moodProvider.todayMood;
@@ -310,19 +319,25 @@ class _HomePageState extends State<HomePage> {
                         emoji: type.emoji,
                         label: type.label,
                         isSelected: todayMood?.mood == type,
-                        onTap: () async {
-                          await moodProvider.saveMood(type);
-                          if (mounted) {
+                        onTap: () {
+                          if (todayMood != null) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
+                              const SnackBar(
                                 content: Text(
-                                  'Mood disimpan: ${type.label} ${type.emoji}',
+                                  'Anda sudah mencatat mood hari ini! Silakan kembali besok 🌱',
                                 ),
-                                backgroundColor: AppColors.primary,
-                                duration: const Duration(seconds: 2),
+                                backgroundColor: AppColors.yellowNormal,
+                                duration: Duration(seconds: 2),
                               ),
                             );
+                            return;
                           }
+                          _showMoodDialog(
+                            context,
+                            type,
+                            moodProvider,
+                            profileProvider,
+                          );
                         },
                       );
                     }).toList(),
@@ -479,7 +494,7 @@ class _HomePageState extends State<HomePage> {
                       ),
                       const SizedBox(width: 10),
                       const Text(
-                        'Insight dari ResahAI',
+                        'Insight dari UBMentalCareAI',
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -523,13 +538,97 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  void _showMoodDialog(
+    BuildContext context,
+    MoodType type,
+    MoodProvider moodProvider,
+    ProfileProvider profileProvider,
+  ) {
+    final noteController = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
+          title: Text(
+            'Catatan Mood (${type.emoji})',
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Apakah ada hal khusus yang membuatmu merasa ${type.label} hari ini? (Opsional)',
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: noteController,
+                maxLines: 3,
+                decoration: InputDecoration(
+                  hintText: 'Tulis catatan di sini...',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text(
+                'Batal',
+                style: TextStyle(color: AppColors.textSecondary),
+              ),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              onPressed: () async {
+                Navigator.pop(context);
+                await moodProvider.saveMood(
+                  type,
+                  note: noteController.text.isNotEmpty
+                      ? noteController.text
+                      : null,
+                  onScoreChanged: (diff) {
+                    profileProvider.updateMoodScore(diff);
+                  },
+                );
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        'Mood disimpan: ${type.label} ${type.emoji}',
+                      ),
+                      backgroundColor: AppColors.primary,
+                      duration: const Duration(seconds: 2),
+                    ),
+                  );
+                }
+              },
+              child: const Text('Simpan'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   Color _getLevelColor(DistressLevel level) {
     switch (level) {
-      case DistressLevel.rendah:
+      case DistressLevel.aman:
         return AppColors.greenNormal;
-      case DistressLevel.sedang:
+      case DistressLevel.waspada:
         return AppColors.yellowNormal;
-      case DistressLevel.tinggi:
+      case DistressLevel.khawatir:
         return AppColors.redNormal;
       case DistressLevel.kritis:
         return AppColors.redDark;
