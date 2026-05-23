@@ -5,7 +5,7 @@ import '../models/distress_classification.dart';
 class ClassificationProvider with ChangeNotifier {
   final SupabaseClient _supabase = Supabase.instance.client;
 
-  DistressLevel _currentLevel = DistressLevel.rendah;
+  DistressLevel _currentLevel = DistressLevel.aman;
   DistressLevel get currentLevel => _currentLevel;
 
   List<DistressClassification> _history = [];

@@ -5,6 +5,7 @@ class ProfileModel {
   final DateTime? birthDate;
   final String role;
   final bool isOnboardingCompleted;
+  final int moodScore;
   final DateTime createdAt;
 
   const ProfileModel({
@@ -14,6 +15,7 @@ class ProfileModel {
     this.birthDate,
     required this.role,
     required this.isOnboardingCompleted,
+    this.moodScore = 0,
     required this.createdAt,
   });
 
@@ -28,6 +30,7 @@ class ProfileModel {
       role: json['role'] as String? ?? 'user',
       isOnboardingCompleted:
           json['is_onboarding_completed'] as bool? ?? false,
+      moodScore: json['mood_score'] as int? ?? 0,
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'] as String)
           : DateTime.now(),
@@ -42,6 +45,7 @@ class ProfileModel {
       'birth_date': birthDate?.toIso8601String().split('T').first,
       'role': role,
       'is_onboarding_completed': isOnboardingCompleted,
+      'mood_score': moodScore,
       'created_at': createdAt.toIso8601String(),
     };
   }
@@ -52,6 +56,7 @@ class ProfileModel {
     DateTime? birthDate,
     String? role,
     bool? isOnboardingCompleted,
+    int? moodScore,
   }) {
     return ProfileModel(
       id: id,
@@ -61,6 +66,7 @@ class ProfileModel {
       role: role ?? this.role,
       isOnboardingCompleted:
           isOnboardingCompleted ?? this.isOnboardingCompleted,
+      moodScore: moodScore ?? this.moodScore,
       createdAt: createdAt,
     );
   }

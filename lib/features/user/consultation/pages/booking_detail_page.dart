@@ -41,11 +41,16 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
     _availableDates = [];
     DateTime now = DateTime.now();
     // Start from tomorrow
-    DateTime current = DateTime(now.year, now.month, now.day).add(const Duration(days: 1));
-    
+    DateTime current = DateTime(
+      now.year,
+      now.month,
+      now.day,
+    ).add(const Duration(days: 1));
+
     // Generate dates for the next 14 weekdays
     while (_availableDates.length < 14) {
-      if (current.weekday >= DateTime.monday && current.weekday <= DateTime.friday) {
+      if (current.weekday >= DateTime.monday &&
+          current.weekday <= DateTime.friday) {
         _availableDates.add(current);
       }
       current = current.add(const Duration(days: 1));
@@ -66,8 +71,11 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
     });
 
     final provider = Provider.of<BookingProvider>(context, listen: false);
-    final booked = await provider.fetchBookingsForPsychologist(widget.psychologist.id, date);
-    
+    final booked = await provider.fetchBookingsForPsychologist(
+      widget.psychologist.id,
+      date,
+    );
+
     if (mounted) {
       setState(() {
         _bookedSlots = booked;
@@ -77,37 +85,60 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
   }
 
   bool _isSlotBooked(TimeOfDay slot) {
-    return _bookedSlots.any((b) => b.hour == slot.hour && b.minute == slot.minute);
+    return _bookedSlots.any(
+      (b) => b.hour == slot.hour && b.minute == slot.minute,
+    );
   }
 
   String _getWeekdayName(int weekday) {
     switch (weekday) {
-      case 1: return 'Sen';
-      case 2: return 'Sel';
-      case 3: return 'Rab';
-      case 4: return 'Kam';
-      case 5: return 'Jum';
-      case 6: return 'Sab';
-      case 7: return 'Min';
-      default: return '';
+      case 1:
+        return 'Sen';
+      case 2:
+        return 'Sel';
+      case 3:
+        return 'Rab';
+      case 4:
+        return 'Kam';
+      case 5:
+        return 'Jum';
+      case 6:
+        return 'Sab';
+      case 7:
+        return 'Min';
+      default:
+        return '';
     }
   }
 
   String _getMonthName(int month) {
     switch (month) {
-      case 1: return 'Jan';
-      case 2: return 'Feb';
-      case 3: return 'Mar';
-      case 4: return 'Apr';
-      case 5: return 'Mei';
-      case 6: return 'Jun';
-      case 7: return 'Jul';
-      case 8: return 'Agu';
-      case 9: return 'Sep';
-      case 10: return 'Okt';
-      case 11: return 'Nov';
-      case 12: return 'Des';
-      default: return '';
+      case 1:
+        return 'Jan';
+      case 2:
+        return 'Feb';
+      case 3:
+        return 'Mar';
+      case 4:
+        return 'Apr';
+      case 5:
+        return 'Mei';
+      case 6:
+        return 'Jun';
+      case 7:
+        return 'Jul';
+      case 8:
+        return 'Agu';
+      case 9:
+        return 'Sep';
+      case 10:
+        return 'Okt';
+      case 11:
+        return 'Nov';
+      case 12:
+        return 'Des';
+      default:
+        return '';
     }
   }
 
@@ -283,11 +314,6 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    doctor.specialist,
-                    style: TextStyle(color: Colors.grey.shade600, fontSize: 15),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
                     doctor.bio ?? doctor.experience,
                     style: TextStyle(color: Colors.grey.shade500, fontSize: 13),
                     textAlign: TextAlign.center,
@@ -321,7 +347,9 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
                         color: isSelected ? AppColors.primary : Colors.white,
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
-                          color: isSelected ? AppColors.primary : Colors.grey.shade200,
+                          color: isSelected
+                              ? AppColors.primary
+                              : Colors.grey.shade200,
                         ),
                       ),
                       child: Column(
@@ -331,7 +359,9 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
                             _getWeekdayName(date.weekday),
                             style: TextStyle(
                               fontSize: 13,
-                              color: isSelected ? Colors.white70 : Colors.grey.shade600,
+                              color: isSelected
+                                  ? Colors.white70
+                                  : Colors.grey.shade600,
                             ),
                           ),
                           const SizedBox(height: 4),
@@ -347,7 +377,9 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
                             _getMonthName(date.month),
                             style: TextStyle(
                               fontSize: 12,
-                              color: isSelected ? Colors.white70 : Colors.grey.shade600,
+                              color: isSelected
+                                  ? Colors.white70
+                                  : Colors.grey.shade600,
                             ),
                           ),
                         ],
@@ -420,15 +452,15 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
                         color: isBooked
                             ? Colors.grey.shade200
                             : isSelected
-                                ? AppColors.primary
-                                : Colors.white,
+                            ? AppColors.primary
+                            : Colors.white,
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
                           color: isBooked
                               ? Colors.grey.shade300
                               : isSelected
-                                  ? AppColors.primary
-                                  : AppColors.primary.withOpacity(0.3),
+                              ? AppColors.primary
+                              : AppColors.primary.withOpacity(0.3),
                         ),
                       ),
                       alignment: Alignment.center,
@@ -439,8 +471,8 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
                           color: isBooked
                               ? Colors.grey.shade500
                               : isSelected
-                                  ? Colors.white
-                                  : AppColors.primary,
+                              ? Colors.white
+                              : AppColors.primary,
                         ),
                       ),
                     ),

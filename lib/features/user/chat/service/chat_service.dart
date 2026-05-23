@@ -111,12 +111,12 @@ class ChatService {
     if (match != null) {
       final level = match.group(1)!.toUpperCase();
       switch (level) {
-        case 'RENDAH':
-          return DistressLevel.rendah;
-        case 'SEDANG':
-          return DistressLevel.sedang;
-        case 'TINGGI':
-          return DistressLevel.tinggi;
+        case 'AMAN':
+          return DistressLevel.aman;
+        case 'WASPADA':
+          return DistressLevel.waspada;
+        case 'KHAWATIR':
+          return DistressLevel.khawatir;
         case 'KRITIS':
           return DistressLevel.kritis;
       }

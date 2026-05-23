@@ -15,8 +15,7 @@ class ProfileProvider with ChangeNotifier {
   String? _error;
   String? get error => _error;
 
-
-  /// Whether the current user has completed onboarding
+  /// Mengecek apakah user sudah onboarding
   bool get isOnboardingCompleted => _profile?.isOnboardingCompleted ?? false;
 
   /// Current authenticated user's ID
@@ -80,6 +79,21 @@ class ProfileProvider with ChangeNotifier {
 
     // Update local state
     _profile = _profile?.copyWith(isOnboardingCompleted: true);
+    notifyListeners();
+  }
+
+  /// Update mood score
+  Future<void> updateMoodScore(int difference) async {
+    final userId = _currentUserId;
+    if (userId == null) throw Exception('User not authenticated');
+
+    final currentScore = _profile?.moodScore ?? 0;
+    final newScore = currentScore + difference;
+
+    await _profileService.updateMoodScore(userId, newScore);
+
+    // Update local state
+    _profile = _profile?.copyWith(moodScore: newScore);
     notifyListeners();
   }
 

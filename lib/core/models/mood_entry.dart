@@ -41,15 +41,15 @@ extension MoodTypeExtension on MoodType {
   int get numericValue {
     switch (this) {
       case MoodType.sedih:
-        return 1;
+        return -3;
       case MoodType.biasa:
-        return 2;
+        return 0;
       case MoodType.senang:
-        return 3;
+        return 1;
       case MoodType.gembira:
-        return 4;
+        return 2;
       case MoodType.bahagia:
-        return 5;
+        return 3;
     }
   }
 
@@ -72,15 +72,15 @@ extension MoodTypeExtension on MoodType {
 
   static MoodType fromNumeric(int value) {
     switch (value) {
-      case 1:
+      case -3:
         return MoodType.sedih;
-      case 2:
+      case 0:
         return MoodType.biasa;
-      case 3:
+      case 1:
         return MoodType.senang;
-      case 4:
+      case 2:
         return MoodType.gembira;
-      case 5:
+      case 3:
         return MoodType.bahagia;
       default:
         return MoodType.biasa;
@@ -92,6 +92,7 @@ class MoodEntry {
   final String? id;
   final String userId;
   final MoodType mood;
+  final String? note;
   final DateTime date;
   final DateTime createdAt;
 
@@ -99,6 +100,7 @@ class MoodEntry {
     this.id,
     required this.userId,
     required this.mood,
+    this.note,
     required this.date,
     required this.createdAt,
   });
@@ -107,6 +109,7 @@ class MoodEntry {
         'user_id': userId,
         'mood': mood.label,
         'mood_value': mood.numericValue,
+        'note': note,
         'date': date.toIso8601String().split('T')[0],
         'created_at': createdAt.toIso8601String(),
       };
@@ -116,6 +119,7 @@ class MoodEntry {
       id: json['id']?.toString(),
       userId: json['user_id'] ?? '',
       mood: MoodTypeExtension.fromString(json['mood'] ?? 'biasa'),
+      note: json['note'] as String?,
       date: DateTime.tryParse(json['date'] ?? '') ?? DateTime.now(),
       createdAt: DateTime.tryParse(json['created_at'] ?? '') ?? DateTime.now(),
     );

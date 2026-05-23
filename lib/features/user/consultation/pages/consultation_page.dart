@@ -112,45 +112,6 @@ class _ConsultationPageState extends State<ConsultationPage> {
 
           const SizedBox(height: 16),
 
-          // Categories
-          SizedBox(
-            height: 50,
-            child: ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              scrollDirection: Axis.horizontal,
-              itemCount: bookingProvider.categories.length,
-              itemBuilder: (context, index) {
-                final cat = bookingProvider.categories[index];
-                final isSelected = bookingProvider.selectedCategory == cat;
-                return GestureDetector(
-                  onTap: () => bookingProvider.setCategory(cat),
-                  child: Container(
-                    margin: const EdgeInsets.only(right: 12),
-                    child: Chip(
-                      backgroundColor: isSelected
-                          ? AppColors.primary
-                          : Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      label: Text(
-                        cat,
-                        style: TextStyle(
-                          color: isSelected ? Colors.white : Colors.black87,
-                          fontWeight: isSelected
-                              ? FontWeight.bold
-                              : FontWeight.normal,
-                        ),
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-
-          const SizedBox(height: 12),
-
           // Psychologist List
           Expanded(
             child: bookingProvider.isLoading
@@ -253,11 +214,6 @@ class PsychologistCard extends StatelessWidget {
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                       ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      psychologist.specialist,
-                      style: TextStyle(color: Colors.grey.shade700),
                     ),
                     const SizedBox(height: 6),
                     Text(

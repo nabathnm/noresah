@@ -19,7 +19,6 @@ extension BookingStatusExtension on BookingStatus {
 class Psychologist {
   final int id;
   final String name;
-  final String specialist;
   final String experience;
   final double rating;
   final String? imageUrl;
@@ -29,7 +28,6 @@ class Psychologist {
   Psychologist({
     required this.id,
     required this.name,
-    required this.specialist,
     required this.experience,
     required this.rating,
     this.imageUrl,
@@ -41,9 +39,10 @@ class Psychologist {
     final profiles = json['profiles'] as Map<String, dynamic>?;
     final name = profiles?['nickname'] ?? json['name'] ?? '';
     return Psychologist(
-      id: json['id'] is int ? json['id'] : int.tryParse(json['id']?.toString() ?? '') ?? 0,
+      id: json['id'] is int
+          ? json['id']
+          : int.tryParse(json['id']?.toString() ?? '') ?? 0,
       name: name,
-      specialist: json['specialization'] ?? json['specialist'] ?? 'Anxiety & Stress',
       experience: json['experience'] ?? '5 Tahun Pengalaman',
       rating: (json['rating'] ?? 4.8).toDouble(),
       imageUrl: json['image_url'],
@@ -77,10 +76,13 @@ class Booking {
   });
 
   Map<String, dynamic> toJson() {
-    final dateStr = '${scheduledAt.year}-${scheduledAt.month.toString().padLeft(2, '0')}-${scheduledAt.day.toString().padLeft(2, '0')}';
-    final startTimeStr = '${scheduledAt.hour.toString().padLeft(2, '0')}:${scheduledAt.minute.toString().padLeft(2, '0')}:00';
+    final dateStr =
+        '${scheduledAt.year}-${scheduledAt.month.toString().padLeft(2, '0')}-${scheduledAt.day.toString().padLeft(2, '0')}';
+    final startTimeStr =
+        '${scheduledAt.hour.toString().padLeft(2, '0')}:${scheduledAt.minute.toString().padLeft(2, '0')}:00';
     final endTime = scheduledAt.add(const Duration(hours: 1));
-    final endTimeStr = '${endTime.hour.toString().padLeft(2, '0')}:${endTime.minute.toString().padLeft(2, '0')}:00';
+    final endTimeStr =
+        '${endTime.hour.toString().padLeft(2, '0')}:${endTime.minute.toString().padLeft(2, '0')}:00';
 
     return {
       'user_id': userId,
@@ -97,9 +99,14 @@ class Booking {
   factory Booking.fromJson(Map<String, dynamic> json) {
     // 1. Resolve psychologist name from nested join:
     // psychologist_profiles -> profiles -> nickname
-    final psychoProfile = json['psychologist_profiles'] as Map<String, dynamic>?;
-    final psychoInnerProfile = psychoProfile?['profiles'] as Map<String, dynamic>?;
-    final resolvedPsychologistName = psychoInnerProfile?['nickname'] ?? json['psychologist_name'] ?? 'Psikolog';
+    final psychoProfile =
+        json['psychologist_profiles'] as Map<String, dynamic>?;
+    final psychoInnerProfile =
+        psychoProfile?['profiles'] as Map<String, dynamic>?;
+    final resolvedPsychologistName =
+        psychoInnerProfile?['nickname'] ??
+        json['psychologist_name'] ??
+        'Psikolog';
 
     // 2. Resolve user/student nickname from join:
     // profiles -> nickname
@@ -113,14 +120,17 @@ class Booking {
       final timeStr = json['start_time'] as String;
       scheduledVal = DateTime.tryParse('${dateStr}T$timeStr') ?? DateTime.now();
     } else if (json['scheduled_at'] != null) {
-      scheduledVal = DateTime.tryParse(json['scheduled_at'] as String) ?? DateTime.now();
+      scheduledVal =
+          DateTime.tryParse(json['scheduled_at'] as String) ?? DateTime.now();
     }
 
     return Booking(
-      id: json['id'] is int ? json['id'] : int.tryParse(json['id']?.toString() ?? ''),
+      id: json['id'] is int
+          ? json['id']
+          : int.tryParse(json['id']?.toString() ?? ''),
       userId: json['user_id'] ?? '',
-      psychologistId: json['psychologist_id'] is int 
-          ? json['psychologist_id'] 
+      psychologistId: json['psychologist_id'] is int
+          ? json['psychologist_id']
           : int.tryParse(json['psychologist_id']?.toString() ?? '') ?? 0,
       psychologistName: resolvedPsychologistName,
       userNickname: resolvedUserNickname,

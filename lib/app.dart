@@ -8,7 +8,6 @@ import 'core/providers/mood_provider.dart';
 import 'core/providers/journal_provider.dart';
 import 'core/providers/chat_provider.dart';
 import 'core/utils/constant/app_colors.dart';
-import 'features/auth/login/pages/login_page.dart';
 import 'features/auth/onboarding/providers/onboarding_provider.dart';
 import 'core/utils/widgets/auth_gate.dart';
 
