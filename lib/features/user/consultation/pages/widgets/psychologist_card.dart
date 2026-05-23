@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import '../../../../../core/utils/constant/app_colors.dart';
 import '../../../../../core/models/booking.dart';
+import '../../../../../core/models/booking.dart';
+import '../../../../../core/utils/constant/app_colors.dart';
 
 class PsychologistCard extends StatelessWidget {
   final Psychologist psychologist;
   final VoidCallback onBook;
 
-  const PsychologistCard({required this.psychologist, required this.onBook});
+  const PsychologistCard({super.key, required this.psychologist, required this.onBook});
 
   @override
   Widget build(BuildContext context) {
