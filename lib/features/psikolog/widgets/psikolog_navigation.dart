@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../dashboard/pages/psikolog_dashboard_page.dart';
 import '../forum/pages/psikolog_forum_page.dart';
+import '../patient/pages/psikolog_patient_page.dart';
 import '../booking/pages/psikolog_booking_page.dart';
 import '../profile/pages/psikolog_profile_page.dart';
 import '../../../../core/utils/constant/app_colors.dart';
@@ -15,10 +16,11 @@ class PsikologNavigation extends StatefulWidget {
 class _PsikologNavigationState extends State<PsikologNavigation> {
   int _selectedIndex = 0;
 
-  final List<Widget> _pages = const [
+  final List<Widget> _pages = [
     PsikologDashboardPage(),
     PsikologForumPage(),
     PsikologBookingPage(),
+    PsikologPatientPage(),
     PsikologProfilePage(),
   ];
 
@@ -66,10 +68,16 @@ class _PsikologNavigationState extends State<PsikologNavigation> {
                   onTap: () => _onItemTapped(2),
                 ),
                 _NavItem(
-                  icon: Icons.person_rounded,
-                  label: 'Profil',
+                  icon: Icons.people_alt_rounded,
+                  label: 'Pasien',
                   isSelected: _selectedIndex == 3,
                   onTap: () => _onItemTapped(3),
+                ),
+                _NavItem(
+                  icon: Icons.person_rounded,
+                  label: 'Profil',
+                  isSelected: _selectedIndex == 4,
+                  onTap: () => _onItemTapped(4),
                 ),
               ],
             ),
@@ -106,7 +114,9 @@ class _NavItem extends StatelessWidget {
             Icon(
               icon,
               size: 26,
-              color: isSelected ? AppColors.primary : AppColors.navigationNormal,
+              color: isSelected
+                  ? AppColors.primary
+                  : AppColors.navigationNormal,
             ),
             const SizedBox(height: 4),
             Text(
@@ -114,7 +124,9 @@ class _NavItem extends StatelessWidget {
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                color: isSelected ? AppColors.primary : AppColors.navigationNormal,
+                color: isSelected
+                    ? AppColors.primary
+                    : AppColors.navigationNormal,
               ),
             ),
           ],

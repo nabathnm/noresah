@@ -5,8 +5,6 @@ import '../providers/onboarding_provider.dart';
 import '../../../../core/providers/profile_provider.dart';
 import '../../../../core/utils/constant/app_colors.dart';
 import '../../../user/widgets/navigation.dart';
-import '../../../../core/utils/constant/app_colors.dart';
-
 
 class OnboardingPage extends StatefulWidget {
   const OnboardingPage({super.key});
@@ -34,8 +32,6 @@ class _OnboardingPageState extends State<OnboardingPage> {
     _nicknameController.dispose();
     super.dispose();
   }
-
-
 
   void _nextPage() {
     _pageController.nextPage(
@@ -178,9 +174,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: Color(0xFF3D8BFF),
-            ),
+            colorScheme: const ColorScheme.light(primary: Color(0xFF3D8BFF)),
           ),
           child: child!,
         );
@@ -483,10 +477,7 @@ class _ProblemPage extends StatelessWidget {
             Text(
               'Pilih satu atau lebih',
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 13,
-                color: Colors.grey.shade500,
-              ),
+              style: TextStyle(fontSize: 13, color: Colors.grey.shade500),
             ),
 
             const SizedBox(height: 20),
@@ -509,25 +500,38 @@ class _ProblemPage extends StatelessWidget {
                 padding: const EdgeInsets.all(20),
                 child: Column(
                   children: [
-                    Icon(Icons.error_outline, color: Colors.red.shade300, size: 48),
+                    Icon(
+                      Icons.error_outline,
+                      color: Colors.red.shade300,
+                      size: 48,
+                    ),
                     const SizedBox(height: 12),
                     Text(
                       error!,
                       textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.red.shade400, fontSize: 13),
+                      style: TextStyle(
+                        color: Colors.red.shade400,
+                        fontSize: 13,
+                      ),
                     ),
                     const SizedBox(height: 16),
                     GestureDetector(
                       onTap: onRetry,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 10,
+                        ),
                         decoration: BoxDecoration(
                           color: const Color(0xFF3D8BFF),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: const Text(
                           'Coba Lagi',
-                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                     ),
@@ -540,25 +544,38 @@ class _ProblemPage extends StatelessWidget {
                 padding: const EdgeInsets.all(20),
                 child: Column(
                   children: [
-                    Icon(Icons.inbox_rounded, color: Colors.grey.shade400, size: 48),
+                    Icon(
+                      Icons.inbox_rounded,
+                      color: Colors.grey.shade400,
+                      size: 48,
+                    ),
                     const SizedBox(height: 12),
                     Text(
                       'Belum ada data preferences.',
                       textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.grey.shade500, fontSize: 14),
+                      style: TextStyle(
+                        color: Colors.grey.shade500,
+                        fontSize: 14,
+                      ),
                     ),
                     const SizedBox(height: 16),
                     GestureDetector(
                       onTap: onRetry,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 10,
+                        ),
                         decoration: BoxDecoration(
                           color: const Color(0xFF3D8BFF),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: const Text(
                           'Muat Ulang',
-                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                     ),
@@ -596,8 +613,9 @@ class _ProblemPage extends StatelessWidget {
                             boxShadow: isSelected
                                 ? [
                                     BoxShadow(
-                                      color: const Color(0xFF3D8BFF)
-                                          .withValues(alpha: 0.3),
+                                      color: const Color(
+                                        0xFF3D8BFF,
+                                      ).withValues(alpha: 0.3),
                                       blurRadius: 8,
                                       offset: const Offset(0, 2),
                                     ),
@@ -686,9 +704,7 @@ class _GenderCard extends StatelessWidget {
           color: isSelected ? const Color(0xFF3D8BFF) : Colors.white,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: isSelected
-                ? const Color(0xFF3D8BFF)
-                : Colors.grey.shade300,
+            color: isSelected ? const Color(0xFF3D8BFF) : Colors.grey.shade300,
             width: 1.5,
           ),
         ),

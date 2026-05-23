@@ -16,8 +16,10 @@ class _PsikologBookingPageState extends State<PsikologBookingPage> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<BookingProvider>(context, listen: false)
-          .fetchPsychologistBookings();
+      Provider.of<BookingProvider>(
+        context,
+        listen: false,
+      ).fetchPsychologistBookings();
     });
   }
 
@@ -40,82 +42,86 @@ class _PsikologBookingPageState extends State<PsikologBookingPage> {
         ),
         actions: [
           IconButton(
-            onPressed: () =>
-                bookingProvider.fetchPsychologistBookings(),
-            icon: const Icon(Icons.refresh_rounded, color: AppColors.textHeading),
+            onPressed: () => bookingProvider.fetchPsychologistBookings(),
+            icon: const Icon(
+              Icons.refresh_rounded,
+              color: AppColors.textHeading,
+            ),
           ),
         ],
       ),
       body: bookingProvider.isLoading
           ? const Center(
-              child: CircularProgressIndicator(color: AppColors.primary))
+              child: CircularProgressIndicator(color: AppColors.primary),
+            )
           : bookings.isEmpty
-              ? _buildEmptyState()
-              : ListView.builder(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: bookings.length,
-                  itemBuilder: (context, index) {
-                    return _BookingManageCard(
-                      booking: bookings[index],
-                      onConfirm: bookings[index].status == BookingStatus.pending
-                          ? () async {
-                              if (bookings[index].id != null) {
-                                final success = await bookingProvider
-                                    .confirmBooking(bookings[index].id!);
-                                if (success && mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content:
-                                          Text('Booking berhasil dikonfirmasi! ✅'),
-                                      backgroundColor: AppColors.greenNormal,
-                                    ),
-                                  );
-                                }
-                              }
-                            }
-                          : null,
-                      onCancel: bookings[index].status == BookingStatus.pending
-                          ? () async {
-                              if (bookings[index].id != null) {
-                                final confirmed = await showDialog<bool>(
-                                  context: context,
-                                  builder: (ctx) => AlertDialog(
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(20),
-                                    ),
-                                    title: const Text('Tolak Booking?'),
-                                    content: const Text(
-                                      'Apakah Anda yakin ingin menolak booking ini?',
-                                    ),
-                                    actions: [
-                                      TextButton(
-                                        onPressed: () =>
-                                            Navigator.pop(ctx, false),
-                                        child: const Text('Tidak'),
-                                      ),
-                                      TextButton(
-                                        onPressed: () =>
-                                            Navigator.pop(ctx, true),
-                                        child: const Text(
-                                          'Ya, Tolak',
-                                          style: TextStyle(
-                                              color: AppColors.redNormal),
-                                        ),
-                                      ),
-                                    ],
+          ? _buildEmptyState()
+          : ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: bookings.length,
+              itemBuilder: (context, index) {
+                return _BookingManageCard(
+                  booking: bookings[index],
+                  onConfirm: bookings[index].status == BookingStatus.pending
+                      ? () async {
+                          if (bookings[index].id != null) {
+                            final success = await bookingProvider
+                                .confirmBooking(bookings[index].id!);
+                            if (success && mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    'Booking berhasil dikonfirmasi! ✅',
                                   ),
-                                );
-
-                                if (confirmed == true) {
-                                  await bookingProvider
-                                      .cancelBooking(bookings[index].id!);
-                                }
-                              }
+                                  backgroundColor: AppColors.greenNormal,
+                                ),
+                              );
                             }
-                          : null,
-                    );
-                  },
-                ),
+                          }
+                        }
+                      : null,
+                  onCancel: bookings[index].status == BookingStatus.pending
+                      ? () async {
+                          if (bookings[index].id != null) {
+                            final confirmed = await showDialog<bool>(
+                              context: context,
+                              builder: (ctx) => AlertDialog(
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                title: const Text('Tolak Booking?'),
+                                content: const Text(
+                                  'Apakah Anda yakin ingin menolak booking ini?',
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(ctx, false),
+                                    child: const Text('Tidak'),
+                                  ),
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(ctx, true),
+                                    child: const Text(
+                                      'Ya, Tolak',
+                                      style: TextStyle(
+                                        color: AppColors.redNormal,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+
+                            if (confirmed == true) {
+                              await bookingProvider.cancelBooking(
+                                bookings[index].id!,
+                              );
+                            }
+                          }
+                        }
+                      : null,
+                );
+              },
+            ),
     );
   }
 
@@ -124,8 +130,11 @@ class _PsikologBookingPageState extends State<PsikologBookingPage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.calendar_today_rounded,
-              size: 72, color: Colors.grey.shade300),
+          Icon(
+            Icons.calendar_today_rounded,
+            size: 72,
+            color: Colors.grey.shade300,
+          ),
           const SizedBox(height: 16),
           Text(
             'Belum ada pesanan konsultasi',
@@ -189,7 +198,10 @@ class _BookingManageCard extends StatelessWidget {
               CircleAvatar(
                 radius: 24,
                 backgroundColor: AppColors.primaryLight,
-                child: const Icon(Icons.person_outline, color: AppColors.primary),
+                child: const Icon(
+                  Icons.person_outline,
+                  color: AppColors.primary,
+                ),
               ),
               const SizedBox(width: 14),
               Expanded(
@@ -259,10 +271,7 @@ class _BookingManageCard extends StatelessWidget {
                 children: [
                   const Text(
                     'Catatan Pasien:',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 13,
-                    ),
+                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
                   ),
                   const SizedBox(height: 6),
                   Text(

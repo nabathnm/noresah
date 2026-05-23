@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:noresah/core/models/booking.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/providers/booking_provider.dart';
 import '../../../../core/utils/constant/app_colors.dart';
 import 'booking_detail_page.dart';
 import 'my_bookings_page.dart';
-import 'widgets/psychologist_card.dart';
 
 class ConsultationPage extends StatefulWidget {
   const ConsultationPage({super.key});

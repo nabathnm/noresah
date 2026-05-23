@@ -95,4 +95,20 @@ Anda merupakan mobile developer profesional yang akan membangun aplikasi UBMenta
   - **User dapat list journaling** : User dapat melihat daftar journalnya (berdasarkan tanggal)
 
 Tambahan :
-Aplikasi dapat memperlihatkan status mental user (aman, biasa, cemas ,kritis) pada homepage
+
+- Aplikasi dapat memperlihatkan status mental user (aman, biasa, cemas ,kritis) pada homepage
+
+New Feature :
+
+- Saya ingin membuat fitur dimana user bisa memberi reaksi mood dia setiap hari dengan kategori sebagai berikut : - Sedih (-3) - Biasa (0) - Senang (+1) - Gembira (+2) - Bahagia (+3)
+  Alur kerja : User akan diperbolehkan untuk mengisi mood dia hari ini (hanya sekali sehari) -> memencet emojis dan bisa memberi sedikit catatan (opsional) -> sistem akan memberikan point pada table profile user berupa mood poin yang bisa mempengaruhi status kecemasan
+- Status kecemasan user bisa dipengaruhi dari nilai mood user. kategori status kecemasan user yaitu :
+  - Aman (nilai mood user >= 0)
+  - Waspada (nilai mood user <= -10)
+  - Khawatir (nilai mood user <= -30)
+  - Kritis (nilai mood user <= -50)
+
+New Feature 2 :
+
+- Psikolog dapat melihat daftar mahasiswa yang melakukan konsultasi dengan dirinya
+- Psikoog dapat melihat daftar mahasiswa yang dalam status khawatir dan kritis untuk di tindak langsung berdasarkan mood score
