@@ -6,7 +6,11 @@ class PsychologistCard extends StatelessWidget {
   final Psychologist psychologist;
   final VoidCallback onBook;
 
-  const PsychologistCard({required this.psychologist, required this.onBook});
+  const PsychologistCard({
+    super.key,
+    required this.psychologist,
+    required this.onBook,
+  });
 
   @override
   Widget build(BuildContext context) {
