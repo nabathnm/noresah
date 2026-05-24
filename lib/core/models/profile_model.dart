@@ -6,6 +6,7 @@ class ProfileModel {
   final String role;
   final bool isOnboardingCompleted;
   final int moodScore;
+  final int? aiDistressLevel;
   final DateTime createdAt;
 
   const ProfileModel({
@@ -16,6 +17,7 @@ class ProfileModel {
     required this.role,
     required this.isOnboardingCompleted,
     this.moodScore = 0,
+    this.aiDistressLevel,
     required this.createdAt,
   });
 
@@ -31,10 +33,23 @@ class ProfileModel {
       isOnboardingCompleted:
           json['is_onboarding_completed'] as bool? ?? false,
       moodScore: json['mood_score'] as int? ?? 0,
+      aiDistressLevel: _parseAiDistressLevel(json['distress_classifications']),
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'] as String)
           : DateTime.now(),
     );
+  }
+
+  static int? _parseAiDistressLevel(dynamic classifications) {
+    if (classifications == null) return null;
+    if (classifications is List && classifications.isNotEmpty) {
+      // Assuming it's ordered by created_at desc or we take the first one
+      final first = classifications.first;
+      if (first is Map<String, dynamic>) {
+        return first['level'] as int?;
+      }
+    }
+    return null;
   }
 
   Map<String, dynamic> toJson() {
@@ -57,6 +72,7 @@ class ProfileModel {
     String? role,
     bool? isOnboardingCompleted,
     int? moodScore,
+    int? aiDistressLevel,
   }) {
     return ProfileModel(
       id: id,
@@ -67,6 +83,7 @@ class ProfileModel {
       isOnboardingCompleted:
           isOnboardingCompleted ?? this.isOnboardingCompleted,
       moodScore: moodScore ?? this.moodScore,
+      aiDistressLevel: aiDistressLevel ?? this.aiDistressLevel,
       createdAt: createdAt,
     );
   }
