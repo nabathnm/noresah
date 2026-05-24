@@ -134,9 +134,11 @@ class _PsikologPatientPageState extends State<PsikologPatientPage> {
   }
 
   Widget _buildPatientCard(ProfileModel patient) {
-    DistressLevel moodLevel = DistressLevelExtension.fromMoodScore(patient.moodScore);
+    DistressLevel moodLevel = DistressLevelExtension.fromMoodScore(
+      patient.moodScore,
+    );
     DistressLevel finalLevel = moodLevel;
-    
+
     if (patient.aiDistressLevel != null) {
       DistressLevel aiLevel;
       switch (patient.aiDistressLevel) {
@@ -159,7 +161,7 @@ class _PsikologPatientPageState extends State<PsikologPatientPage> {
         finalLevel = aiLevel;
       }
     }
-    
+
     final color = _getLevelColor(finalLevel);
 
     return Container(
@@ -187,7 +189,10 @@ class _PsikologPatientPageState extends State<PsikologPatientPage> {
               shape: BoxShape.circle,
             ),
             child: Center(
-              child: Text(finalLevel.emoji, style: const TextStyle(fontSize: 24)),
+              child: Text(
+                finalLevel.emoji,
+                style: const TextStyle(fontSize: 24),
+              ),
             ),
           ),
           const SizedBox(width: 16),
@@ -240,7 +245,7 @@ class _PsikologPatientPageState extends State<PsikologPatientPage> {
                       'Halo ${patient.nickname}, saya psikolog dari UBMentalCare. Saya melihat kondisi Anda sedang membutuhkan perhatian. Ada yang bisa saya bantu?',
                     );
                     final url = Uri.parse(
-                      'https://wa.me/6285888121200?text=$message',
+                      'https://wa.me/628176400168?text=$message',
                     );
                     if (await canLaunchUrl(url)) {
                       await launchUrl(url);

@@ -26,15 +26,15 @@ extension MoodTypeExtension on MoodType {
   String get emoji {
     switch (this) {
       case MoodType.sedih:
-        return '😢';
+        return '\u{1F622}';
       case MoodType.biasa:
-        return '😐';
+        return '\u{1F610}';
       case MoodType.senang:
-        return '🙂';
+        return '\u{1F642}';
       case MoodType.gembira:
-        return '😄';
+        return '\u{1F604}';
       case MoodType.bahagia:
-        return '🥳';
+        return '\u{1F973}';
     }
   }
 

@@ -18,13 +18,13 @@ extension DistressLevelExtension on DistressLevel {
   String get emoji {
     switch (this) {
       case DistressLevel.aman:
-        return '🟢';
+        return '\u{1F7E2}';
       case DistressLevel.waspada:
-        return '🟡';
+        return '\u{1F7E1}';
       case DistressLevel.khawatir:
-        return '🟠';
+        return '\u{1F7E0}';
       case DistressLevel.kritis:
-        return '🔴';
+        return '\u{1F534}';
     }
   }
 
