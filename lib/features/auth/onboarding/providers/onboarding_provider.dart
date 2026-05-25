@@ -16,6 +16,9 @@ class OnboardingProvider with ChangeNotifier {
   String _nickname = '';
   String get nickname => _nickname;
 
+  String _phoneNumber = '';
+  String get phoneNumber => _phoneNumber;
+
   String? _gender;
   String? get gender => _gender;
 
@@ -54,6 +57,10 @@ class OnboardingProvider with ChangeNotifier {
     // Don't notifyListeners for every keystroke — let TextField handle it
   }
 
+  void setPhoneNumber(String value) {
+    _phoneNumber = value;
+  }
+
   void setGender(String? value) {
     _gender = value;
     notifyListeners();
@@ -76,7 +83,10 @@ class OnboardingProvider with ChangeNotifier {
 
   // ── Validation ──
   bool get isSlide2Valid =>
-      _nickname.trim().isNotEmpty && _gender != null && _birthDate != null;
+      _nickname.trim().isNotEmpty &&
+      _phoneNumber.trim().isNotEmpty &&
+      _gender != null &&
+      _birthDate != null;
 
   bool get isSlide3Valid => _selectedPreferenceIds.isNotEmpty;
 
@@ -123,6 +133,7 @@ class OnboardingProvider with ChangeNotifier {
         nickname: _nickname.trim(),
         gender: _gender!,
         birthDate: _birthDate!,
+        phoneNumber: _phoneNumber.trim(),
       );
       return true;
     } catch (e) {
@@ -173,6 +184,7 @@ class OnboardingProvider with ChangeNotifier {
   void reset() {
     _currentPage = 0;
     _nickname = '';
+    _phoneNumber = '';
     _gender = null;
     _birthDate = null;
     _availablePreferences = [];

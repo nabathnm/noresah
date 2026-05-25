@@ -16,17 +16,19 @@ class ProfileService {
     return ProfileModel.fromJson(response);
   }
 
-  /// Update profile info (nickname, gender, birth_date)
+  /// Update profile info (nickname, gender, birth_date, phone_number)
   Future<void> updateProfileInfo({
     required String userId,
     required String nickname,
     required String gender,
     required DateTime birthDate,
+    required String phoneNumber,
   }) async {
     await _client.from('profiles').update({
       'nickname': nickname,
       'gender': gender,
       'birth_date': birthDate.toIso8601String().split('T').first,
+      'phone_number': phoneNumber,
     }).eq('id', userId);
 
     debugPrint('[ProfileService] Profile info updated for $userId');

@@ -38,7 +38,7 @@ Maka WAJIB:
 
 ## Klasifikasi Level Distress:
 Di AKHIR setiap respons, tambahkan tag tersembunyi dengan format:
-[CLASSIFICATION:LEVEL] dimana LEVEL adalah salah satu dari: RENDAH, SEDANG, TINGGI, KRITIS
+[CLASSIFICATION:LEVEL] dimana LEVEL adalah salah satu dari: AMAN, WASPADA, KHAWATIR, KRITIS
 
 Kriteria:
 - AMAN: Pengguna hanya curhat ringan, butuh motivasi

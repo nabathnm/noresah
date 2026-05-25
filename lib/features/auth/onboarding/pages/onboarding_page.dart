@@ -16,6 +16,7 @@ class OnboardingPage extends StatefulWidget {
 class _OnboardingPageState extends State<OnboardingPage> {
   final PageController _pageController = PageController();
   final _nicknameController = TextEditingController();
+  final _phoneController = TextEditingController();
 
   @override
   void initState() {
@@ -30,6 +31,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
   void dispose() {
     _pageController.dispose();
     _nicknameController.dispose();
+    _phoneController.dispose();
     super.dispose();
   }
 
@@ -132,10 +134,12 @@ class _OnboardingPageState extends State<OnboardingPage> {
               // ── Slide 2: Profile info ──
               _ProfilePage(
                 nicknameController: _nicknameController,
+                phoneController: _phoneController,
                 gender: provider.gender,
                 birthDate: provider.birthDate,
                 isSaving: provider.isSaving,
                 onNicknameChanged: (v) => provider.setNickname(v),
+                onPhoneChanged: (v) => provider.setPhoneNumber(v),
                 onGenderChanged: (v) => provider.setGender(v),
                 onBirthDateTap: () => _showDatePicker(provider),
                 onBack: _prevPage,
@@ -254,10 +258,12 @@ class _WelcomePage extends StatelessWidget {
 // ─────────────────────────────────────────
 class _ProfilePage extends StatelessWidget {
   final TextEditingController nicknameController;
+  final TextEditingController phoneController;
   final String? gender;
   final DateTime? birthDate;
   final bool isSaving;
   final ValueChanged<String> onNicknameChanged;
+  final ValueChanged<String> onPhoneChanged;
   final ValueChanged<String?> onGenderChanged;
   final VoidCallback onBirthDateTap;
   final VoidCallback onBack;
@@ -265,10 +271,12 @@ class _ProfilePage extends StatelessWidget {
 
   const _ProfilePage({
     required this.nicknameController,
+    required this.phoneController,
     required this.gender,
     required this.birthDate,
     required this.isSaving,
     required this.onNicknameChanged,
+    required this.onPhoneChanged,
     required this.onGenderChanged,
     required this.onBirthDateTap,
     required this.onBack,
@@ -312,6 +320,33 @@ class _ProfilePage extends StatelessWidget {
               style: const TextStyle(fontSize: 15),
               decoration: InputDecoration(
                 hintText: 'Nama panggilan',
+                hintStyle: TextStyle(color: Colors.grey.shade400),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 16,
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: BorderSide(color: Colors.grey.shade300),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: BorderSide(color: AppColors.primary),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            // ── Phone number input ──
+            TextField(
+              controller: phoneController,
+              onChanged: onPhoneChanged,
+              keyboardType: TextInputType.phone,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 15),
+              decoration: InputDecoration(
+                hintText: 'Nomor telepon',
                 hintStyle: TextStyle(color: Colors.grey.shade400),
                 contentPadding: const EdgeInsets.symmetric(
                   horizontal: 20,

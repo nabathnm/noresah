@@ -18,6 +18,7 @@ Anda merupakan mobile developer profesional yang akan membangun aplikasi UBMenta
 
 - Flutter (Frontend)
 - Supabase (Backend)
+- Groq API (Primary LLM: Llama 3.3) & Google Gemini API (Fallback LLM: Gemini 2.5)
 
 ## Role
 
@@ -50,13 +51,13 @@ Anda merupakan mobile developer profesional yang akan membangun aplikasi UBMenta
 - Fitur Wajib:
   - **AI Chatting** : User bisa bertanya kepada AI dan mendapatkan jawaban
   - **Riwayat AI Chatting** : User bisa melihat riwayat percakapannya dengan AI
-  - **Otomatis mengetahui tingkat kecemasan user** : Sistem akan secara otomatis mendeteksi tingkat kecemasan user (aman, biasa, cemas ,kritis)
+  - **Otomatis mengetahui tingkat kecemasan user** : Sistem akan secara otomatis mendeteksi tingkat kecemasan user (aman, waspada, khawatir, kritis)
 
 4. Call Darurat
 
-- Tujuan : Ketika status user "dikatakan pada tingkat tinggi / kritis" maka akan muncul tombol untuk melakukan panggilan darurat
+- Tujuan : Ketika status kecemasan/distress user terdeteksi "kritis" atau mengandung kata kunci darurat, maka akan muncul tombol untuk melakukan panggilan darurat
 - Fitur Wajib:
-  - **Tombol Call Darurat** : Muncul ketika status user "dikatakan pada tingkat tinggi / kritis"
+  - **Tombol Call Darurat** : Muncul ketika status kecemasan user "kritis" atau terpicu oleh kata kunci darurat
   - **Otomatis terhubung ke layanan darurat** : Sistem akan otomatis terhubung ke layanan darurat
   - **Otomatis terkirim lokasi user** : Sistem akan otomatis mengirim lokasi user ke layanan darurat
 
@@ -96,7 +97,7 @@ Anda merupakan mobile developer profesional yang akan membangun aplikasi UBMenta
 
 Tambahan :
 
-- Aplikasi dapat memperlihatkan status mental user (aman, biasa, cemas ,kritis) pada homepage
+- Aplikasi dapat memperlihatkan status mental user (aman, waspada, khawatir, kritis) pada homepage
 
 New Feature :
 

@@ -3,6 +3,7 @@ class ProfileModel {
   final String? nickname;
   final String? gender;
   final DateTime? birthDate;
+  final String? phoneNumber;
   final String role;
   final bool isOnboardingCompleted;
   final int moodScore;
@@ -14,6 +15,7 @@ class ProfileModel {
     this.nickname,
     this.gender,
     this.birthDate,
+    this.phoneNumber,
     required this.role,
     required this.isOnboardingCompleted,
     this.moodScore = 0,
@@ -29,6 +31,7 @@ class ProfileModel {
       birthDate: json['birth_date'] != null
           ? DateTime.parse(json['birth_date'] as String)
           : null,
+      phoneNumber: json['phone_number'] as String?,
       role: json['role'] as String? ?? 'user',
       isOnboardingCompleted:
           json['is_onboarding_completed'] as bool? ?? false,
@@ -58,6 +61,7 @@ class ProfileModel {
       'nickname': nickname,
       'gender': gender,
       'birth_date': birthDate?.toIso8601String().split('T').first,
+      'phone_number': phoneNumber,
       'role': role,
       'is_onboarding_completed': isOnboardingCompleted,
       'mood_score': moodScore,
@@ -69,6 +73,7 @@ class ProfileModel {
     String? nickname,
     String? gender,
     DateTime? birthDate,
+    String? phoneNumber,
     String? role,
     bool? isOnboardingCompleted,
     int? moodScore,
@@ -79,6 +84,7 @@ class ProfileModel {
       nickname: nickname ?? this.nickname,
       gender: gender ?? this.gender,
       birthDate: birthDate ?? this.birthDate,
+      phoneNumber: phoneNumber ?? this.phoneNumber,
       role: role ?? this.role,
       isOnboardingCompleted:
           isOnboardingCompleted ?? this.isOnboardingCompleted,

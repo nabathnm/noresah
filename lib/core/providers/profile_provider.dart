@@ -45,11 +45,12 @@ class ProfileProvider with ChangeNotifier {
     }
   }
 
-  /// Update profile info (nickname, gender, birth_date)
+  /// Update profile info (nickname, gender, birth_date, phone_number)
   Future<void> updateProfileInfo({
     required String nickname,
     required String gender,
     required DateTime birthDate,
+    required String phoneNumber,
   }) async {
     final userId = _currentUserId;
     if (userId == null) throw Exception('User not authenticated');
@@ -59,6 +60,7 @@ class ProfileProvider with ChangeNotifier {
       nickname: nickname,
       gender: gender,
       birthDate: birthDate,
+      phoneNumber: phoneNumber,
     );
 
     // Update local state
@@ -66,6 +68,7 @@ class ProfileProvider with ChangeNotifier {
       nickname: nickname,
       gender: gender,
       birthDate: birthDate,
+      phoneNumber: phoneNumber,
     );
     notifyListeners();
   }
