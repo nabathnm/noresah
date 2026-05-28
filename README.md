@@ -16,12 +16,12 @@ Built using a clean, modular feature-first architecture, Noresah leverages **Sup
 
 ### 🤖 ResahAI (Empathetic AI Chatbot)
 *   **Initial Mitigation:** Conversational support acts as the first line of defense for students experiencing anxiety, stress, or panic.
-*   **Distress Level Detection:** The AI automatically analyzes the tone and sentiment of the conversation to categorize the user's distress level into four tiers: **Aman (Safe)**, **Biasa (Normal)**, **Cemas (Anxious)**, and **Kritis (Critical)**.
+*   **Distress Level Detection:** The AI automatically analyzes the tone and sentiment of the conversation to categorize the user's distress level into four tiers: **Aman (Safe)**, **Waspada (Alert)**, **Khawatir (Anxious)**, and **Kritis (Critical)**.
 *   **Conversation History:** Easily access, view, and continue past interactions with ResahAI.
 *   **Rich Text Support:** Seamless rendering of markdown responses from Gemini.
 
 ### 🚨 Emergency Call (Call Darurat)
-*   **Automatic Activation:** An emergency banner and quick-access emergency call button automatically trigger on the UI if the student's distress level escalates to **Tinggi (High)** or **Kritis (Critical)**.
+*   **Automatic Activation:** An emergency banner and quick-access emergency call button automatically trigger on the UI if the student's distress level escalates to **Kritis (Critical)** or if emergency keywords are detected in the conversation.
 *   **Location Integration:** Automatically retrieves and sends the user's current coordinates to emergency services when initiating the call.
 *   **Direct Hotline:** Instant connection to university security/medical clinics and emergency hotlines.
 
@@ -46,7 +46,9 @@ Built using a clean, modular feature-first architecture, Noresah leverages **Sup
 
 *   **Frontend Framework:** Flutter (Dart SDK `^3.11.5`)
 *   **Backend-as-a-Service:** [Supabase Flutter](https://pub.dev/packages/supabase_flutter) (Database, Authentication, Storage)
-*   **AI Engine:** [Google Generative AI](https://pub.dev/packages/google_generative_ai) (Gemini model API)
+*   **AI Engine (Hybrid & Fallback):**
+    *   **Primary:** Groq API (using `llama-3.3-70b-versatile`)
+    *   **Fallback:** Google Generative AI (Gemini API via `google_generative_ai`)
 *   **State Management:** [Provider](https://pub.dev/packages/provider) (Clean separation of state and UI components)
 *   **Content Renderer:** [Flutter Markdown](https://pub.dev/packages/flutter_markdown)
 *   **Hardware / Device Utilities:**
